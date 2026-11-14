@@ -2440,7 +2440,7 @@ function evTap(i){
   if(i===e.ans){const g=6+e.left*2;e.gain+=g;e.found++;e.done=1;e.msg=`찾았다! '${GM_ST[e.st].target}'. 탐지 경험 +${g}`;}
   else{e.left--;
     const ax=e.ans%3,ay=Math.floor(e.ans/3),bx=i%3,by=Math.floor(i/3),d=Math.max(Math.abs(ax-bx),Math.abs(ay-by)),m=Math.abs(ax-bx)+Math.abs(ay-by);
-    let h=m===1?"아주 가깝다! 위아래나 양옆, 바로 붙은 칸이다.":d===1?"가깝다. 대각선으로 붙은 칸이다.":"멀다. 두 칸 이상 떨어져 있다.";
+    let h=d===1?"가깝다.":"멀다.";
     if(dlv()>=5){const dir=[ay<by?"위":ay>by?"아래":"",ax<bx?"왼쪽":ax>bx?"오른쪽":""].filter(Boolean).join(" ");h+=` 탐지 감각: ${dir} 방향.`;}
     if(e.left<=0){e.done=1;e.msg=`기회를 다 썼다. 정답은 빛나는 칸이었다. (${h})`;} else e.msg=h;}
   renderEvent();
