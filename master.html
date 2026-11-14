@@ -2676,6 +2676,7 @@ $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
 function masterFill(){
   RELICS.forEach(x=>P.relics[x.id]=1);
+  P.detxp=Math.max(P.detxp||0,DET_XP[DET_XP.length-1]);
   PLAYABLE.forEach(id=>{const c=cp(id);c.recs=[...new Set([...(c.recs||[]),...CAVES[id].recs])];const o=svOf(id);Object.keys(CAVES[id].nodes).forEach(k=>o[k]=2);c.svDone=1;});
   saveP();
 }
