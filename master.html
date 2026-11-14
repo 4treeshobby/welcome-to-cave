@@ -1105,10 +1105,10 @@ const plvOf=x=>{let l=1;LV_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
 const plv=()=>MASTER?10:plvOf(xp());
 const STA_MIN=30;
 const staIv=()=>(90-(plv()-1)*10/3)*1000;
-function staNow(){if(MASTER){P.sta=100;P.staT=Date.now();return 100;}const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
+function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
 const staMin=v=>Math.max(0,Math.ceil((v-staNow())*staIv()/60000));
 const staTxt=()=>Math.floor(staNow())>=100?"가득 참":`${staMin(100)}분 뒤 가득`;
-function staChip(){const el=$("staChip");if(!el)return;if(MASTER){el.innerHTML='<b style="color:var(--red)">마스터</b>';return;}const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`체력 <b>${v}</b>`;el.title=staTxt();}
+function staChip(){const el=$("staChip");if(!el)return;const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`${MASTER?'<span style="color:var(--red)">마스터</span> · ':''}체력 <b>${v}</b>`;el.title=staTxt();}
 setInterval(()=>{try{if(S&&S.phase!=="cave")staChip();}catch(e){}},30000);
 const DET_XP=[0,10,25,45,70,100,140,190,250,320];
 const dlvOf=x=>{let l=1;DET_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
@@ -2468,8 +2468,8 @@ function drawOwner(){
 /* ================= 장비점 ================= */
 let shopFrom="map", shopSel="food", shopMsg="", shopTab="trade";
 function openShop(from){shopFrom=from;S.phase="shop";shopMsg="";ownerSay=OWNER_HI[Math.floor(Math.random()*OWNER_HI.length)];renderShop();window.scrollTo(0,0);}
-function gukRow(){const cd=(P.gukT||0)+3600000-Date.now(),v=Math.floor(staNow());
-  return `<div class="guk"><span><b>사장님 국밥</b> 체력 +30 · 한 시간에 한 그릇 · 지금 체력 ${v}</span><button id="gukb" ${cd>0||P.money<8000||v>=100?'disabled':''}>${cd>0?Math.ceil(cd/60000)+"분 뒤":v>=100?"배부름":"₩8,000"}</button></div>`;}
+function gukRow(){const cd=MASTER?0:(P.gukT||0)+3600000-Date.now(),v=Math.floor(staNow());
+  return `<div class="guk"><span><b>사장님 국밥</b> 체력 +30 · ${MASTER?"마스터는 무제한":"한 시간에 한 그릇"} · 지금 체력 ${v}</span><button id="gukb" ${cd>0||P.money<8000||v>=100?'disabled':''}>${cd>0?Math.ceil(cd/60000)+"분 뒤":v>=100?"배부름":"₩8,000"}</button></div>`;}
 function renderShop(){
   if(shopTab==="up") return renderUpgrade();
   hud(); drawBag(); drawBook(); artShow(0); $("logSec").hidden=true;
