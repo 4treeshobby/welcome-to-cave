@@ -370,7 +370,7 @@ button.ttl:focus-visible{outline:2px solid var(--red);outline-offset:-4px}
 .title-scr canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
 .t-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin-top:-6vh}
-.t-in img.logo{width:min(560px,88vw);max-width:none}
+.t-in img.logo{width:min(560px,88vw);max-width:none;transform:translateX(3%)}
 .t-sub{margin:0;font-family:var(--f-ui);font-size:14px;letter-spacing:.2em;color:#e8dcc8;text-shadow:0 2px 0 #0f0b14}
 .t-btn{margin-top:18px;font-family:var(--f-title);font-size:22px;color:var(--navy);background:var(--yellow);border:0;padding:10px 34px;cursor:pointer;
   box-shadow:0 -3px 0 0 #fff6c8,0 3px 0 0 #fff6c8,-3px 0 0 0 #fff6c8,3px 0 0 0 #fff6c8,0 9px 0 0 #8a6400;animation:tb 1.2s steps(2) infinite}
@@ -490,6 +490,29 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 .eff{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--dim)}
 .eff li::before{content:"□ "}.eff li.on{color:var(--ink)}.eff li.on::before{content:"■ ";color:var(--moss)}
 .permits{display:flex;gap:6px;flex-wrap:wrap}.permits span{font-size:12px;padding:2px 8px;color:var(--dim);box-shadow:inset 0 0 0 2px var(--line)}.permits span.on{color:var(--navy);background:var(--yellow-2);box-shadow:inset 0 0 0 2px var(--yellow)}
+.choices button.survey{background:#f3f7fb;box-shadow:0 -2px 0 0 var(--navy),0 2px 0 0 var(--navy),-2px 0 0 0 var(--navy),2px 0 0 0 var(--navy),0 5px 0 0 #c9d6e3}
+.choices button.survey::before{background:var(--navy)}
+.choices button small.svh{color:var(--navy)}
+.svpick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:8px}
+.svpick button{font:inherit;font-size:12px;padding:4px 2px;border:0;background:#fff;color:var(--dim);cursor:pointer;box-shadow:inset 0 0 0 2px var(--line);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.svpick button small{font-size:10px}
+.svpick button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:560px){.me .stabs{gap:4px}.me .stabs button{font-size:13px;white-space:nowrap;padding:5px 0;letter-spacing:-.02em}}
+.svpick button.on{background:var(--yellow);color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}
+.svpick button.done small{color:var(--moss);font-weight:600}
+.svhd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.svhd b{font-family:var(--f-title);font-weight:400;font-size:16px;color:var(--navy)}.svhd span{font-size:11px;color:var(--dim)}
+.svwrap{position:relative;box-shadow:0 0 0 2px var(--navy)}
+.svwrap canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.svn{position:absolute;transform:translate(4px,-120%);font:600 10px/1 var(--f-body,system-ui);color:var(--navy);background:#fffdf3cc;padding:1px 2px;pointer-events:none}
+.svn.err{color:#c0503a}.svn.sb{transform:translate(0,-50%);background:none;color:var(--dim);font-weight:400}
+.svempty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;margin:0;font-size:12px;color:var(--dim)}
+.svlist{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:12px}
+.svlist li{display:flex;align-items:baseline;gap:5px;color:var(--dim);min-width:0}
+.svlist li i{font-style:normal;font-weight:600;width:16px;text-align:right;flex:none}
+.svlist li span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svlist li small{font-size:10px;flex:none}
+.svlist li.ok{color:var(--ink)}.svlist li.ok small{color:var(--moss)}.svlist li.err small{color:#c0503a}
 .dexhd{font-size:13px;color:var(--dim);margin-bottom:8px}.dexhd b{font-family:var(--f-title);font-size:20px;color:var(--navy)}
 .relics{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .relic{background:#fff;padding:8px 10px;box-shadow:inset 0 0 0 2px var(--line);font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:2px}
@@ -622,7 +645,7 @@ const GEAR={
   blanket:{n:"은박 담요",slot:1,max:2,d:"몸을 감싸 체온 35 회복. 다른 사람에게 덮어 줄 수도 있다.",use:1},
   firstaid:{n:"구급 키트",slot:1,max:1,d:"부목, 압박붕대, 소독약. 부상자 처치용. 직접 쓰면 체력 10 회복.",use:1},
   gas:{n:"가스 측정기",slot:1,max:1,d:"이산화탄소·산소 농도를 잰다. 공기가 고인 구간을 미리 알려준다."},
-  survey:{n:"측량 키트",slot:1,max:1,d:"레이저 거리계와 클리노미터. 지나온 구간의 거리를 측량 기록으로 남긴다."},
+  survey:{n:"측량 키트",slot:1,max:1,d:"레이저 거리·경사·방위계와 방수 야장. 구간마다 스테이션을 박고 측량하면 내 정보의 측량도가 한 칸씩 그려진다. 모든 구간을 정밀 측량하면 측량도가 완성된다."},
   camera:{n:"접사 카메라",slot:1,max:1,d:"작은 생물을 확대 촬영해 종을 확인한다."},
 };
 const PRESET={};
@@ -1056,7 +1079,7 @@ function tryRelic(node){
 /* ================= 상태 ================= */
 let S, msg=[], kit={...PRESET}, selCave=null, tab="kr";
 function newRun(){
-  S={phase:"map",min:480,cave:null,bat:100,bk:60,usingBk:0,sta:100,tmp:100,mode:1,inv:{},sel:null,f:{},rec:[],meters:0,seen:{},cur:null,prev:null,
+  S={phase:"map",min:480,cave:null,bat:100,bk:60,usingBk:0,sta:100,tmp:100,mode:1,inv:{},sel:null,f:{},rec:[],meters:0,sv:{},seen:{},cur:null,prev:null,
      dy:{met:0,tmp:8,blanket:0,fed:0,splint:0,free:0,escort:0,dead:0}};
   msg=[];
 }
@@ -1107,6 +1130,7 @@ function moveTo(id,ch){
   S.sta-=5+Math.round((cost.sta||0)*(ch&&ch.srt?srtMul():(has("outer")?.7:1)))+(dy().escort?3:0);
   S.min+=25+Math.round((cost.sta||0)*2)+(dy().escort?10:0)+(sc.wet?10:0);
   S.tmp-=has("inner")?1:2;
+  if(ch&&ch.cls==="back"&&svDone(S.cave)){S.sta+=2;S.min-=10;}
   if(sc.wet){let loss=has("suit")?6*sc.wet:28*sc.wet/ (sc.wet>1?1.4:1);if(has("inner"))loss*=.75;if(has("outer"))loss*=.8;loss=Math.round(loss);S.tmp-=loss;if(!has("suit"))pushMsg({t:`차가운 물에 몸이 젖었다. 체온 ${loss} 감소.${has("inner")||has("outer")?" 동굴복이 조금 막아 준다.":""}`,bad:1});}
   else if(SCN()[S.cur]?.wet&&!has("suit")) S.tmp-=(has("inner")||has("outer"))?3:6;
   lightStep();
@@ -1116,7 +1140,7 @@ function moveTo(id,ch){
     if(d.tmp===2) pushMsg({t:"스퀴즈 너머의 도윤이 걱정된다. 저체온은 시간 문제다.",bad:1});
     if(d.tmp<=0) d.dead=1;
   }
-  if(!S.seen[id]){S.seen[id]=1;if(has("survey"))S.meters+=sc.len;}
+  if(!S.seen[id])S.seen[id]=1;
   S.prev=S.cur; S.cur=id; S.sel=null;
   if(sc.goal&&!S.f.goal){S.f.goal=1;pushMsg({t:"막장을 찍었다! 이제 무사히 탈굴할 차례다.",rec:1});dropPermit(1);}
   if(!sc.goal&&!S.f['v_'+id]){S.f['v_'+id]=1;dropPermit(0);}
@@ -1138,6 +1162,30 @@ function pick(ch){
   if(ch.go) return moveTo(ch.go,ch);
   warn();
   const e=deathCheck(); if(e) return end(e);
+  render();
+}
+/* ---- 측량 ---- */
+const svOf=id=>cp(id).sv||(cp(id).sv={});
+const svQ=n=>Math.max(svOf(S.cave)[n]||0,S.sv[n]||0);
+const svNodes=id=>Object.keys(CAVES[id].nodes);
+const svCount=(id,sv)=>{const N=svNodes(id);return {n:N.length,ok:N.filter(k=>(sv[k]||0)>=2).length,any:N.filter(k=>(sv[k]||0)>=1).length,m:N.reduce((a,k)=>a+((sv[k]||0)?CAVES[id].nodes[k].len:0),0)};};
+const svDone=id=>!!cp(id).svDone;
+const svMerged=()=>{const o={...svOf(S.cave)};Object.entries(S.sv).forEach(([k,q])=>o[k]=Math.max(o[k]||0,q));return o;};
+function svLeg(id,n){const r=rng("sv:"+id+":"+n);return {inc:Math.round(r()*30-15),az:Math.floor(r()*360)};}
+function survey(){
+  msg=[];const n=S.cur,sc=SCN()[n],was=svQ(n);
+  S.min+=20; lightStep(); S.tmp=clamp(S.tmp-1);
+  const p=Math.min(.95,.45+dlv()*.05+(lampMode()===2?.1:lampMode()===0?-.15:0)+(was?.15:0));
+  const q=Math.max(was,Math.random()<p?2:1);
+  S.sv[n]=Math.max(S.sv[n]||0,q);
+  if(!was) S.meters+=sc.len; else if(was===1&&q===2) S.meters+=Math.round(sc.len/2);
+  gainDet(1);
+  const L=svLeg(S.cave,n);
+  pushMsg({t:`스테이션을 박고 측량했다. 거리 ${sc.len}m · 경사 ${L.inc>0?"+":""}${L.inc}° · 방위 ${String(L.az).padStart(3,"0")}° · 20분`,rec:1});
+  pushMsg(q===2?{t:was===1?"다시 재 보니 수치가 딱 맞아떨어진다. 오차를 지웠다. 정밀 측량.":"레이저 점이 또렷하다. 정밀 측량.",rec:1}:{t:"레이저 점이 흔들려 수치가 들쭉날쭉하다. 오차가 있는 측량이다. 밝기를 올리거나 다시 재면 나아진다.",bad:1});
+  const c=svCount(S.cave,svMerged());
+  if(c.ok===c.n&&!svDone(S.cave)&&!S.f.svAll){S.f.svAll=1;pushMsg({t:`이 동굴의 모든 구간을 정밀 측량했다! 무사히 탈굴하면 측량도가 완성된다.`,rec:1});}
+  warn(); const e=deathCheck(); if(e) return end(e);
   render();
 }
 function record(id){msg=[];S.rec.push(id);S.min+=10;gainDet(1);pushMsg({t:`탐사 기록장에 적었다: ${REC[id].n} · 관찰과 기록에 10분`,rec:1});render();}
@@ -1260,7 +1308,7 @@ function drawBook(){
   if(!S.cave||S.phase==="map"){box.hidden=true;return;} box.hidden=false;
   const C=cave(), keys=C.recs, old=cp(S.cave).recs;
   const known=k=>S.rec.includes(k)||old.includes(k);
-  box.innerHTML=`<button class="ttl tg" data-d="book" aria-expanded="${drawerOpen.book}">${ptxt("탐사 기록장",{size:12,shadow:"#fff4c4"})}<span>이번 ${S.rec.length} · 누적 ${new Set([...old,...S.rec]).size}/${keys.length}${has("survey")||S.meters?` · ${S.meters}m`:""}<em>${drawerOpen.book?"▲":"▼"}</em></span></button>
+  box.innerHTML=`<button class="ttl tg" data-d="book" aria-expanded="${drawerOpen.book}">${ptxt("탐사 기록장",{size:12,shadow:"#fff4c4"})}<span>이번 ${S.rec.length} · 누적 ${new Set([...old,...S.rec]).size}/${keys.length}${S.meters?` · 측량 ${S.meters}m`:""}<em>${drawerOpen.book?"▲":"▼"}</em></span></button>
   <div class="recgrid">${keys.map(k=>{const r=REC[k],g=S.rec.includes(k),o=old.includes(k);
     return `<button class="rslot ${g?'new':o?'old':'unk'} ${bookSel===k?'sel':''}" data-k="${k}" ${known(k)?'':'disabled'}>${known(k)?ico(r.cat):'<i>?</i>'}<span>${known(k)?r.n:"???"}</span></button>`}).join("")}</div>
   <div class="tip ${bookSel&&known(bookSel)&&keys.includes(bookSel)?'':'muted'}">${bookSel&&known(bookSel)&&keys.includes(bookSel)?`${ico(REC[bookSel].cat,"big")}<div class="tx"><b>${REC[bookSel].n} <small>${REC[bookSel].cat}</small></b><span>${REC[bookSel].d}</span></div>`:"기록을 누르면 설명을 볼 수 있다. 흐린 칸은 지난 탐사에서 남긴 기록."}</div>`;
@@ -2059,13 +2107,55 @@ function evEnd(){
 }
 
 /* ================= 내 정보 ================= */
-let meTab="pro",meSel="lamp",lkSel="food",lkMsg="";
+let meTab="pro",meSel="lamp",lkSel="food",lkMsg="",svSel="gossi";
+function svLayout(id){
+  const C=CAVES[id],N=C.nodes,pos={},par={},order=[C.start],r=rng("lay:"+id);
+  pos[C.start]=[0,0];const ang={[C.start]:(r()-.5)*.6};
+  for(let i=0;i<order.length;i++){const k=order[i];
+    const kids=[...new Set(N[k].c.map(c=>c.go).filter(g=>g&&!(g in pos)))];
+    kids.forEach((g,j)=>{const a=ang[k]+(j-(kids.length-1)/2)*1.05+(r()-.5)*.35,L=Math.max(22,N[g].len);
+      pos[g]=[pos[k][0]+Math.cos(a)*L,pos[k][1]+Math.sin(a)*L*.85];ang[g]=a;par[g]=k;order.push(g);});}
+  const E=[],seen=new Set();order.forEach(k=>N[k].c.forEach(c=>{if(!c.go||!(c.go in pos))return;const key=[k,c.go].sort().join("|");if(!seen.has(key)&&k!==c.go){seen.add(key);E.push([k,c.go]);}}));
+  return {pos,order,E};
+}
+function drawSurvey(cv,id,sv){
+  if(!cv)return;const W=200,H=120,c=mkCtx(cv,W,H),{pos,order,E}=svLayout(id),N=CAVES[id].nodes;
+  R(c,0,0,W,H,"#f7f3e3");for(let x=0;x<W;x+=10)R(c,x,0,1,H,x%50?"#e6ecef":"#cfdbe3");for(let y=0;y<H;y+=10)R(c,0,y,W,1,y%50?"#e6ecef":"#cfdbe3");
+  const xs=order.map(k=>pos[k][0]),ys=order.map(k=>pos[k][1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const sc=Math.min((W-36)/Math.max(1,x1-x0),(H-34)/Math.max(1,y1-y0));
+  const P2=k=>[Math.round(18+(pos[k][0]-x0)*sc+((W-36)-(x1-x0)*sc)/2),Math.round(14+(pos[k][1]-y0)*sc+((H-34)-(y1-y0)*sc)/2)];
+  const line=(a,b,col,w,dash)=>{let [x,y]=a;const [X,Y]=b,dx=Math.abs(X-x),dy=-Math.abs(Y-y),sx=x<X?1:-1,sy=y<Y?1:-1;let e=dx+dy,i=0;
+    for(;;){if(!dash||(i>>1)%2===0)R(c,x-(w>>1),y-(w>>1),w,w,col);i++;if(x===X&&y===Y)break;const e2=2*e;if(e2>=dy){e+=dy;x+=sx;}if(e2<=dx){e+=dx;y+=sy;}}};
+  const q=k=>sv[k]||0;
+  E.forEach(([a,b])=>{if(q(a)&&q(b))line(P2(a),P2(b),q(a)>1&&q(b)>1?"#e3d2a6":"#f0dccd",7);});
+  E.forEach(([a,b])=>{if(q(a)&&q(b))line(P2(a),P2(b),q(a)>1&&q(b)>1?"#22324a":"#c0503a",1,!(q(a)>1&&q(b)>1));});
+  order.forEach(k=>{if(!q(k))return;const [x,y]=P2(k);
+    if(k===CAVES[id].start){R(c,x-3,y-3,7,7,"#22324a");R(c,x-2,y-2,5,5,"#f2b705");}
+    else if(N[k].goal){R(c,x-2,y-2,5,5,"#d9472b");R(c,x,y-8,1,7,"#22324a");R(c,x+1,y-8,4,3,"#d9472b");}
+    else{R(c,x-2,y-2,5,5,"#22324a");R(c,x-1,y-1,3,3,q(k)>1?"#ffffff":"#f0a090");}});
+  // 방위표 · 축척
+  R(c,W-10,6,1,11,"#22324a");R(c,W-12,8,5,1,"#22324a");R(c,W-11,7,3,1,"#22324a");R(c,W-10,5,1,1,"#d9472b");
+  const m20=Math.round(20*sc);R(c,6,H-7,m20,2,"#22324a");R(c,6,H-10,1,5,"#22324a");R(c,6+m20,H-10,1,5,"#22324a");
+  const wrap=cv.parentElement;wrap.querySelectorAll(".svn").forEach(e=>e.remove());
+  order.forEach((k,i)=>{if(!q(k))return;const [x,y]=P2(k),s=document.createElement("span");s.className="svn"+(q(k)>1?"":" err");s.textContent=i+1;s.style.left=(x/W*100)+"%";s.style.top=(y/H*100)+"%";wrap.appendChild(s);});
+  const sb=document.createElement("span");sb.className="svn sb";sb.textContent="20m";sb.style.left=((6+m20+4)/W*100)+"%";sb.style.top=((H-8)/H*100)+"%";wrap.appendChild(sb);
+}
+function svPage(){
+  if(!PLAYABLE.includes(svSel))svSel="gossi";
+  const id=svSel,sv=svOf(id),c=svCount(id,sv),{order}=svLayout(id),N=CAVES[id].nodes,done=svDone(id);
+  const picks=PLAYABLE.map(k=>{const cc=svCount(k,svOf(k));return `<button class="${k===id?'on':''} ${svDone(k)?'done':''}" data-id="${k}">${CAVES[k].name}<small>${svDone(k)?"완성":cc.any?`${cc.ok}/${cc.n}`:"-"}</small></button>`;}).join("");
+  return `<div class="svpick">${picks}</div>
+    <div class="svhd"><b>${CAVES[id].name} 측량도</b><span>${done?"완성 · 갈림길 정보 + 빠른 귀환":c.any?`정밀 ${c.ok} / ${c.n}구간 · ${c.m}m`:"아직 측량하지 않았다"}</span></div>
+    <div class="svwrap"><canvas id="svCv" aria-label="${CAVES[id].name} 측량도"></canvas>${c.any?"":`<p class="svempty">측량 키트를 챙겨 입굴한 뒤<br>구간마다 "측량한다"를 고르면 여기에 그려진다.</p>`}</div>
+    <ol class="svlist">${order.map((k,i)=>{const q=sv[k]||0;return `<li class="${q>1?'ok':q?'err':''}"><i>${i+1}</i><span>${q?N[k].p:"???"}</span><small>${q?N[k].len+"m · "+(q>1?"정밀":"오차"):"미측량"}</small></li>`;}).join("")}</ol>
+    <p class="shopnote">측량은 한 구간에 20분. 밝기가 낮거나 탐지 능력이 낮으면 오차가 잘 난다. 모든 구간을 정밀 측량하고 탈굴하면 측량도가 완성돼 종모산악에 납품(+5만 원)하고, 다음 입굴부터 갈림길마다 행선지가 보이며 돌아가는 길이 빨라진다.</p>`;
+}
 function openMe(){if(S.phase==="cave")return;S.phase="me";renderMe();window.scrollTo(0,0);}
 function bar(v,lo,hi){return `<span class="pbar"><i style="width:${hi?Math.round((v-lo)/(hi-lo)*100):100}%"></i></span>`;}
 function renderMe(){
   hud(); drawBag(); drawBook(); artShow(0); $("logSec").hidden=true;
   const x=xp(),l=plv(),dx=P.detxp||0,dl=dlv();
-  const tabs=`<div class="stabs"><button class="${meTab==='pro'?'on':''}" data-t="pro">프로필</button><button class="${meTab==='gear'?'on':''}" data-t="gear">장착·휴대</button><button class="${meTab==='dex'?'on':''}" data-t="dex">도감</button><button class="${meTab==='relic'?'on':''}" data-t="relic">유물</button></div>`;
+  const tabs=`<div class="stabs"><button class="${meTab==='pro'?'on':''}" data-t="pro">프로필</button><button class="${meTab==='gear'?'on':''}" data-t="gear">장착·휴대</button><button class="${meTab==='dex'?'on':''}" data-t="dex">도감</button><button class="${meTab==='relic'?'on':''}" data-t="relic">유물</button><button class="${meTab==='map'?'on':''}" data-t="map">측량도</button></div>`;
   let body="";
   if(meTab==="pro"){
     const done=Object.values(P.caves).filter(c=>c.goal).length;
@@ -2107,6 +2197,8 @@ function renderMe(){
       <p class="shopnote">기록에는 시간이 든다(한 번에 10분). 생성물을 깨거나 박쥐 동면을 방해하면 그 탐사의 지원금이 30% 깎인다.</p>
       <div class="recgrid">${all.map(k=>{const r=REC[k],g=have.has(k);return `<button class="rslot ${g?'new':'unk'}" data-k="${k}" ${g?'':'disabled'}>${g?ico(r.cat):'<i>?</i>'}<span>${g?r.n:"???"}</span></button>`;}).join("")}</div>
       <div class="tip ${lkSel&&REC[lkSel]&&have.has(lkSel)?'':'muted'}">${lkSel&&REC[lkSel]&&have.has(lkSel)?`${ico(REC[lkSel].cat,"big")}<div class="tx"><b>${REC[lkSel].n} <small>${REC[lkSel].cat}</small></b><span>${REC[lkSel].d}</span><span class="meta">발견되는 곳: ${where(lkSel)||"-"}</span></div>`:"등록한 항목을 누르면 설명이 나온다."}</div>`;
+  } else if(meTab==="map"){
+    body=svPage();
   } else {
     body=`<div class="dexhd"><b>${Object.keys(P.relics).length}</b> / ${RELICS.length}개 · 과거에 다녀간 탐사자의 흔적</div>
       <div class="relics">${RELICS.map(x=>{const g=P.relics[x.id];const cv=x.cave==="gm"?"광명동굴":CAVES[x.cave].name;return `<div class="relic ${g?'on':''}"><b>${g?x.n:"???"}</b><small>${cv}</small><span>${g?x.d:"아직 찾지 못했다. 탐지 능력이 높을수록 잘 찾는다."}</span></div>`;}).join("")}</div>`;
@@ -2120,6 +2212,8 @@ function renderMe(){
     renderMe();});
   document.querySelectorAll(".me .packgrid .slot[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;P.loadout[k]=Math.max(0,(P.loadout[k]||0)-1);if(!P.loadout[k])delete P.loadout[k];lkMsg="";saveP();renderMe();});
   document.querySelectorAll(".me .rslot[data-k]").forEach(b=>b.onclick=()=>{lkSel=b.dataset.k;renderMe();});
+  document.querySelectorAll(".me .svpick button").forEach(b=>b.onclick=()=>{svSel=b.dataset.id;renderMe();});
+  if(meTab==="map") drawSurvey($("svCv"),svSel,svOf(svSel));
   $("choices").innerHTML="";
   animate();
 }
@@ -2175,7 +2269,7 @@ function startCave(){
   Object.entries(kit).forEach(([k,n])=>{P.stock[k]=Math.max(0,own(k)-n);});saveP();
   S.inv={...kit,helmet:1}; S.phase="cave"; msg=[];
   if(!has("backup")) S.bk=0;
-  const st=cave().start; S.cur=st; S.seen[st]=1; if(has("survey"))S.meters+=SCN()[st].len;
+  const st=cave().start; S.cur=st; S.seen[st]=1;
   render();
 }
 
@@ -2314,7 +2408,8 @@ function render(){
   const sc=SCN()[S.cur];
   hud(); drawBag(true); drawBook();
   artShow(1); drawScene($("art"),(ART[S.cave]||{})[S.cur]||"hall",S.cave+":"+S.cur);
-  $("place").innerHTML=`${sc.p}<span>${cave().name}${has("survey")?" · 누적 측량 "+S.meters+"m":""}</span>`;
+  const svc=svCount(S.cave,svMerged());
+  $("place").innerHTML=`${sc.p}<span>${cave().name}${has("survey")||svc.any?` · 측량 ${svc.ok}/${svc.n}`:""}</span>`;
   let html=sc.t().map(speech).join("");
   const lm=Math.min(2,lampMode()+detSight());
   const hidden=sc.disc.filter(id=>!S.rec.includes(id)&&REC[id].light>lm&&!(REC[id].bat&&S.f.disturbed));
@@ -2332,6 +2427,11 @@ function render(){
     if(reason) b.disabled=true; else b.onclick=()=>record(id);
     box.appendChild(b);
   });
+  if(has("survey")&&svQ(S.cur)<2){
+    const b=document.createElement("button"); b.className="record survey";
+    b.innerHTML=`${svQ(S.cur)?"이 구간을 다시 측량해 오차를 지운다":"스테이션을 박고 이 구간을 측량한다"}<small>20분 · 배터리 조금 · ${sc.len}m${lampMode()===0?" · 어두우면 오차가 잘 난다":""}</small>`;
+    b.onclick=survey; box.appendChild(b);
+  }
   const rest=sc.norest?[]:[{t:"조명을 끄고 잠시 쉰다",cls:"back",sub:`체력 +15 · 체온 −${has("inner")?3:8}`,do:()=>{S.sta+=15;S.tmp-=has("inner")?3:8;S.min+=30;return "헤드램프를 끄고 바위에 등을 기댔다. 완전한 어둠 속에 물방울 소리만 들린다. 몸이 식는다.";}}];
   [...sc.c.filter(c=>!c.if||c.if()),...rest].forEach(c=>{
     const b=document.createElement("button");
@@ -2339,7 +2439,8 @@ function render(){
     const label=typeof c.t==="function"?c.t():c.t;
     let reason=c.dis&&c.dis();
     if(!reason&&dy().escort&&c.go&&ESCORT_BLOCK.includes(c.go)) reason="도윤을 데리고 더 깊이 들어갈 수 없다";
-    b.innerHTML=label+(reason?`<small>${reason}</small>`:(c.sub?`<small>${c.sub}</small>`:""));
+    const hint=!c.sub&&c.go&&svDone(S.cave)?`측량도 · ${SCN()[c.go].p} ${SCN()[c.go].len}m${SCN()[c.go].goal?" · 막장 방향":""}${c.cls==="back"?" · 아는 길이라 빠르다":""}`:"";
+    b.innerHTML=label+(reason?`<small>${reason}</small>`:(c.sub?`<small>${c.sub}</small>`:hint?`<small class="svh">${hint}</small>`:""));
     if(reason) b.disabled=true; else b.onclick=()=>pick(c);
     box.appendChild(b);
   });
@@ -2370,6 +2471,9 @@ function end(k){
   const dex0=DEX0, dmg=S.f.broke||S.f.disturbed;
   const gotRelics=safe?(S.relicDrops||[]):[];
   if(safe){gotRelics.forEach(id=>{P.relics[id]=1;P.money+=5000;gainDet(5);});}
+  let svBonus=0;
+  if(safe){const o=svOf(S.cave);Object.entries(S.sv).forEach(([kk,q])=>o[kk]=Math.max(o[kk]||0,q));
+    const c=svCount(S.cave,o);if(c.ok===c.n&&!p.svDone){p.svDone=1;svBonus=Math.round(50000*moneyMul()/100)*100;P.money+=svBonus;gainDet(10);}}
   if(safe){gotPermits.forEach(id=>P.permits[id]=1);earn=Math.round((10000+newRecs*5000+(goalNew?20000:0)+S.meters*100*(dexHas(15)?2:1))*moneyMul()*(dmg?0.7:1)/100)*100;P.money+=earn;
     Object.entries(S.inv).forEach(([kk,n])=>{if(kk!=="helmet")P.stock[kk]=own(kk)+n;});}
   if(!P.endings.includes(k)) P.endings.push(k);
@@ -2385,7 +2489,7 @@ function end(k){
   $("place").textContent="";
   const pre=msg.map(m=>m.t.startsWith("@")?speech(m.t):`<p class="note ${m.bad?'bad':''}">${m.t}</p>`).join("");
   const extra=safe?[dyLine(),S.f.broke?"생성물을 깨뜨린 일은 보고서 한쪽에 따로 적었다.":null,S.f.disturbed?"박쥐 동면을 방해한 일도 함께 보고했다.":null].filter(Boolean):[];
-  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>탐사 경력 <b>+${gained}</b> → ${xp()} (무사 탈굴 +5 포함)${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
+  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}${svBonus?`<br><span class="lvup">측량도 완성! 종모산악에 납품 +${won(svBonus)} · 다음 입굴부터 갈림길 정보와 빠른 귀환</span>`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>탐사 경력 <b>+${gained}</b> → ${xp()} (무사 탈굴 +5 포함)${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
     :`이번 기록 ${S.rec.length}개는 동굴에 남았다. 탈굴하지 못한 탐사는 경력과 지원금에 들어가지 않고, 챙겨 간 장비와 찾은 허가증도 잃었다.`;
   $("story").innerHTML=`<div class="ending"><div class="tag">${E.kind} · ${cave().name} · 결말 ${keys.indexOf(k)+1} / ${keys.length}</div><div style="margin:4px 0 12px">${ptxt(E.t,{size:16,scale:2,shadow:"#f2b705"})}</div>${pre}${E.d().map(speech).join("")}${extra.map(speech).join("")}<p class="score">${score}</p></div>`;
   const box=$("choices"); box.innerHTML="";
