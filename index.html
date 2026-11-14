@@ -513,6 +513,9 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 .svlist li span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .svlist li small{font-size:10px;flex:none}
 .svlist li.ok{color:var(--ink)}.svlist li.ok small{color:var(--moss)}.svlist li.err small{color:#c0503a}
+.mwx{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;color:var(--red);margin-top:6px}
+.mwx button{font:inherit;font-size:12px;border:0;background:#fff;color:var(--navy);padding:2px 8px;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.mwx button.on{background:var(--yellow);box-shadow:0 0 0 2px var(--navy)}
 .stachip{margin-left:auto;align-self:center;font-size:12px;color:var(--dim);padding:0 4px;white-space:nowrap}
 .stachip b{font-family:var(--f-title);font-weight:400;font-size:15px;color:var(--moss)}.stachip.low b{color:var(--red)}
 .guk{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim);margin:6px 0 8px}
@@ -1066,9 +1069,10 @@ const ENDINGS={
 };
 
 /* ================= 진행 저장 ================= */
-const PKEY="cave_progress_v1";
+const MASTER=!!window.__MASTER||/(^|[#?&])master\b/.test(location.hash+location.search);
+const PKEY=MASTER?"cave_master_v1":"cave_progress_v1";
 function loadP(){try{const p=JSON.parse(localStorage.getItem(PKEY)||"null");if(p&&p.caves)return p;}catch(e){} return {caves:{},endings:[]};}
-function ensureP(){if(P.money==null)P.money=60000;if(!P.stock)P.stock={};if(!P.permits)P.permits={};if(P.detxp==null)P.detxp=0;if(!P.loadout)P.loadout={};if(!P.relics)P.relics={};if(!P.gm)P.gm={day:"",n:0};if(!P.endings)P.endings=[];if(!P.caves)P.caves={};ensureGear();}
+function ensureP(){if(MASTER){P.money=Math.max(P.money||0,9999999);P.stock=P.stock||{};Object.keys(GEAR).forEach(k=>{if(k!=="helmet"&&(P.stock[k]||0)<5)P.stock[k]=5;});P.enh=Math.max(P.enh||0,99);}if(P.money==null)P.money=60000;if(!P.stock)P.stock={};if(!P.permits)P.permits={};if(P.detxp==null)P.detxp=0;if(!P.loadout)P.loadout={};if(!P.relics)P.relics={};if(!P.gm)P.gm={day:"",n:0};if(!P.endings)P.endings=[];if(!P.caves)P.caves={};ensureGear();}
 let CLOUD=null,cloudT=0,saveWhere="이 기기";
 const onClaude=()=>!!(window.claude&&window.claude.use);
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});}catch(e){}
@@ -1096,13 +1100,13 @@ const cp=id=>P.caves[id]||(P.caves[id]={recs:[],goal:0,runs:0});
 const xp=()=>Object.keys(P.caves).reduce((a,id)=>a+P.caves[id].recs.length*10+(P.caves[id].goal?20:0),0)+(P.trips||0)*5;
 const LV_XP=[0,20,50,90,140,200,270,350,440,540];
 const plvOf=x=>{let l=1;LV_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
-const plv=()=>plvOf(xp());
+const plv=()=>MASTER?10:plvOf(xp());
 const STA_MIN=30;
 const staIv=()=>(90-(plv()-1)*10/3)*1000;
-function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
+function staNow(){if(MASTER){P.sta=100;P.staT=Date.now();return 100;}const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
 const staMin=v=>Math.max(0,Math.ceil((v-staNow())*staIv()/60000));
 const staTxt=()=>Math.floor(staNow())>=100?"가득 참":`${staMin(100)}분 뒤 가득`;
-function staChip(){const el=$("staChip");if(!el)return;const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`체력 <b>${v}</b>`;el.title=staTxt();}
+function staChip(){const el=$("staChip");if(!el)return;if(MASTER){el.innerHTML='<b style="color:var(--red)">마스터</b>';return;}const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`체력 <b>${v}</b>`;el.title=staTxt();}
 setInterval(()=>{try{if(S&&S.phase!=="cave")staChip();}catch(e){}},30000);
 const DET_XP=[0,10,25,45,70,100,140,190,250,320];
 const dlvOf=x=>{let l=1;DET_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
@@ -1124,7 +1128,7 @@ const capOf=l=>11+Math.floor((l-1)/2)+(dexHas(10)?1:0);
 const cap=()=>capOf(plv());
 function gainDet(n){const b=dlv();P.detxp=(P.detxp||0)+Math.round(n*detMul());return dlv()>b;}
 const PLAYABLE=["gossi","gosu","seong","hwaam","ilgwang","baek","hwan"];
-const hasPermit=id=>id==="gossi"||!!(P.permits&&P.permits[id]);
+const hasPermit=id=>MASTER||id==="gossi"||!!(P.permits&&P.permits[id]);
 const unlocked=id=>plv()>=CAVES[id].lv&&hasPermit(id);
 const nextPermit=()=>PLAYABLE.find(id=>!hasPermit(id)&&!(S.drops||[]).includes(id));
 function dropPermit(force){
@@ -1253,7 +1257,8 @@ function pick(ch){
 }
 /* ---- 날씨 ---- */
 const WX={sun:{n:"맑음"},cloud:{n:"흐림"},rain:{n:"비"},storm:{n:"폭우"}};
-function wxOf(id){const d=new Date();const r=rng(`wx:${id}:${d.getFullYear()}-${d.getMonth()}-${d.getDate()}:${Math.floor(d.getHours()/3)}`)();return r<.5?"sun":r<.72?"cloud":r<.93?"rain":"storm";}
+let MWX=null;
+function wxOf(id){if(MASTER&&MWX)return MWX;const d=new Date();const r=rng(`wx:${id}:${d.getFullYear()}-${d.getMonth()}-${d.getDate()}:${Math.floor(d.getHours()/3)}`)();return r<.5?"sun":r<.72?"cloud":r<.93?"rain":"storm";}
 const raining=()=>S.wx==="rain"||S.wx==="storm";
 const WX_FX={
   gossi:{wet:{water:1,pool:1},note:"비로 남한강 물이 불었다. 수로가 더 깊고 차갑다."},
@@ -2398,6 +2403,8 @@ function renderPrep(){
   const b=document.createElement("button"); const sv0=Math.floor(staNow());
   b.innerHTML=`이 장비로 입굴한다 (${used}칸 · 체력 ${sv0})${sv0<STA_MIN?`<small>몸이 무겁다. 체력 ${STA_MIN}부터 입굴할 수 있다 · ${staMin(STA_MIN)}분 뒤 · 종모산악 국밥으로 회복할 수도 있다</small>`:`<small>날씨: ${WX[wxOf(S.cave)].n}${WX_FX[S.cave]&&["rain","storm"].includes(wxOf(S.cave))?" · 이 동굴은 비의 영향을 받는다":""}</small>`}`;
   b.disabled=used>CAP||sv0<STA_MIN; b.onclick=startCave; box.appendChild(b);
+  if(MASTER){const w=document.createElement("div");w.className="mwx";w.innerHTML="마스터 · 날씨 고정 "+[[null,"자동"],...Object.entries(WX).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button data-w="${k||""}" class="${(MWX||"")===(k||"")?"on":""}">${n}</button>`).join("");
+    w.querySelectorAll("button").forEach(x=>x.onclick=()=>{MWX=x.dataset.w||null;renderPrep();});box.appendChild(w);}
   animate();
 }
 function startCave(){
@@ -2650,7 +2657,7 @@ $("toTitle").onclick=()=>{if(S.phase==="cave"&&!confirmLeave())return;showTitle(
 $("nvMap").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;selCave=null;newRun();renderMap();window.scrollTo(0,0);};
 $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
-newRun(); renderMap(); showTitle(); initCloud();
+newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 · 마스터";}
 </script>
 
 </body>
