@@ -426,11 +426,16 @@ body.ontitle .glow{display:none}
 .eqstat{display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;color:var(--dim)}
 .eqstat span{background:#fff;padding:2px 5px;box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .eqstat b{color:var(--navy)}
+.eqstat span.hi{background:#fff4c4;box-shadow:inset 0 0 0 2px var(--yellow);color:var(--ink)}
+.eqdet .role{font-size:11px;color:var(--navy);line-height:1.35;margin-top:2px}.eqdet .role em{font-style:normal;background:var(--navy);color:#fff;padding:0 4px;margin-right:4px;font-size:10px}
+.efft{width:100%;flex-basis:100%;border-collapse:collapse;font-size:11px;margin-top:6px}.efft td{padding:3px 4px;border-top:1px dashed var(--line);color:var(--dim)}
+.efft td.n{text-align:right;color:var(--navy);font-weight:600;white-space:nowrap}.efft td.u{text-align:right;color:var(--moss);white-space:nowrap}.efft td.h{font-weight:400;color:var(--dim)}
+.pbar2{display:inline-block;width:56px;height:6px;background:#e3e8ee;vertical-align:middle;margin-left:4px}.pbar2 i{display:block;height:100%;background:var(--yellow)}
 .eqenh{display:flex;align-items:center;gap:6px;justify-content:center;font-size:12px;color:var(--ink)}
 .eqenh img{width:22px;height:22px;image-rendering:pixelated}
 .mini{font-family:var(--f-ui);font-size:11px;color:var(--navy);background:var(--yellow);border:0;padding:3px 8px;cursor:pointer;box-shadow:0 0 0 2px var(--navy)}
 .mini:disabled{background:var(--slot);color:var(--dim);cursor:not-allowed}
-.eqdet{display:flex;gap:10px;align-items:center;margin-top:14px;background:#fff;padding:8px 10px;box-shadow:inset 0 0 0 3px var(--tc)}
+.eqdet{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;background:#fff;padding:8px 10px;box-shadow:inset 0 0 0 3px var(--tc)}
 .eqdet .tx{display:flex;flex-direction:column;min-width:0;flex:1}
 .eqdet .tx b{font-family:var(--f-title);font-weight:400;font-size:16px;color:var(--navy)}
 .eqdet .br{font-size:12px;color:var(--ink)}
@@ -675,6 +680,33 @@ const lampMul=()=>{const g=P.gear.lamp;return Math.max(.5,1-g.t*.12-g.e*.03);};
 const lampRad=()=>{const g=P.gear.lamp;return 1+g.t*.1+g.e*.02;};
 const srtQ=()=>SRT_PARTS.reduce((a,[k])=>a+P.gear.srt[k].t*2+P.gear.srt[k].e,0)/SRT_PARTS.length;
 const srtMul=()=>Math.max(.45,1-srtQ()*.06);
+/* ---- 부품별 역할 ---- */
+const PS=k=>{const g=P.gear.srt[k];return g?g.t*2+g.e:0;};
+const avgPS=ks=>ks.reduce((a,k)=>a+PS(k),0)/ks.length;
+const CLIMB=["croll","hand","foot"],SAFE=["harness","maillon"];
+const descMul=()=>1-PS("desc")*.035, climbMul=()=>1-avgPS(CLIMB)*.04;
+const descMin=()=>Math.round(PS("desc")*1.5), climbMin=()=>Math.round(avgPS(CLIMB)*2);
+const cowsBon=()=>PS("cows")*.04, hangMin=()=>90-PS("cows")*4;
+const fallMul=()=>1-avgPS(SAFE)*.05;
+const findBon=()=>Math.max(0,(lampRad()-1)*.5);
+const lampSee=()=>lampRad()>=1.25?1:0;
+function srtDir(ch){const lab=typeof ch.t==="function"?ch.t():String(ch.t||"");return /올라|상승|오른|오르/.test(lab)?{mul:climbMul(),min:climbMin()}:{mul:descMul(),min:descMin()};}
+const ROLE={lamp:"배터리를 아끼고, 넓게 비춰 숨은 것을 찾는다",harness:"몸을 붙잡아 미끄러짐·추락 사고를 줄인다",maillon:"하네스와 장비를 잇는 고리. 미끄러짐·추락 사고를 줄인다",desc:"하강할 때 체력과 시간을 줄인다",croll:"오를 때 체력과 시간을 줄인다",hand:"오를 때 체력과 시간을 줄인다",foot:"오를 때 체력과 시간을 줄인다",cows:"줄 갈아타기·자기 확보 성공률을 올리고 매달리는 시간을 줄인다"};
+const pc=v=>Math.round(v*100);
+const EFF={
+  lamp:[["배터리 소모",()=>"×"+lampMul().toFixed(2)],["빛 범위",()=>"×"+lampRad().toFixed(2)],["유물 발견",()=>"+"+pc(findBon())+"%"],["숨은 발견물",()=>lampSee()?"한 단계 밝게":"빛 범위 ×1.25부터"]],
+  desc:[["하강 체력",()=>"×"+descMul().toFixed(2)],["하강 시간",()=>"−"+descMin()+"분"]],
+  croll:[["오름 체력",()=>"×"+climbMul().toFixed(2)],["오름 시간",()=>"−"+climbMin()+"분"]],
+  cows:[["갈아타기 성공",()=>"+"+pc(cowsBon())+"%"],["매달림 시간",()=>hangMin()+"분"]],
+  harness:[["미끄러짐·추락 위험",()=>"×"+fallMul().toFixed(2)]],
+};
+EFF.hand=EFF.croll;EFF.foot=EFF.croll;EFF.maillon=EFF.harness;
+const HI={lamp:[4,5],desc:[0],croll:[1],hand:[1],foot:[1],cows:[2],harness:[3],maillon:[3]};
+function eqStat(sel){const cells=[["하강 체력","×"+descMul().toFixed(2)],["오름 체력","×"+climbMul().toFixed(2)],["갈아타기","+"+pc(cowsBon())+"%"],["추락 위험","×"+fallMul().toFixed(2)],["배터리","×"+lampMul().toFixed(2)],["유물 발견","+"+pc(findBon())+"%"]];
+  return `<div class="eqstat">${cells.map(([a,v],i)=>`<span class="${(HI[sel]||[]).includes(i)?'hi':''}">${a} <b>${v}</b></span>`).join("")}</div>`;}
+function effTable(sel){const g=upGear(sel),rows=EFF[sel]||[];const now=rows.map(r=>r[1]());let nxt=null;if(g.e<5){g.e++;nxt=rows.map(r=>r[1]());g.e--;}
+  const sc=sel==="lamp"?null:PS(sel);
+  return `<table class="efft"><tr><td></td><td class="n h">지금</td><td class="u h">다음 강화</td></tr>${sc!=null?`<tr><td>부품 점수</td><td class="n">${sc} / 9<span class="pbar2"><i style="width:${Math.round(sc/9*100)}%"></i></span></td><td class="u">${g.e<5?"+"+(g.e+1)+" → "+(sc+1):"최고"}</td></tr>`:""}${rows.map((r,i)=>`<tr><td>${r[0]}</td><td class="n">${now[i]}</td><td class="u">${nxt?(nxt[i]===now[i]?"-":"→ "+nxt[i]):"최고"}</td></tr>`).join("")}</table>`;}
 const ROPE_LEN={rope15:15,rope:30,rope45:45,rope60:60};
 const ropeTot=()=>Object.keys(ROPE_LEN).reduce((a,k)=>a+(S.inv[k]||0)*ROPE_LEN[k],0);
 const ropeLen=()=>Object.keys(ROPE_LEN).reduce((m,k)=>has(k)?Math.max(m,ROPE_LEN[k]):m,0);
@@ -840,7 +872,7 @@ CAVES.ilgwang={lv:5,tip:"윗입구는 수직 70m! 로프 두 동을 이어 쓸 �
          {t:"철책을 넘어 안쪽으로",if:()=>!S.f.snake,go:"ridge"},{t:"산 중턱으로 나간다",if:()=>!S.f.snake,go:"slope",cls:"back"}]},
     ridge:{p:"돌고개",len:60,disc:["flowstone","stalactite"],t:()=>["입구에서 50~60m. 종유석과 유석이 흘러내려 굳으며 작은 고개를 이뤘다.",raining()?"빗물이 스며들어 유석 비탈이 비누처럼 미끄럽다.":"매끈한 유석 비탈이다. 잘못 디디면 미끄러진다."],
       c:[{t:"홈을 찾아 하나씩 디디며 넘는다",go:"plaza",cost:{sta:6}},
-         {t:"빠르게 넘어간다",go:"plaza",do:()=>Math.random()<(raining()?.6:.35)?(S.sta-=12,{t:"유석 위에서 미끄러져 무릎을 찧었다. 체력 −12.",bad:1}):null},
+         {t:"빠르게 넘어간다",go:"plaza",do:()=>Math.random()<(raining()?.6:.35)*fallMul()?(S.sta-=12,{t:"유석 위에서 미끄러져 무릎을 찧었다. 체력 −12.",bad:1}):null},
          {t:"입구로 돌아간다",go:"lower",cls:"back"}]},
     plaza:{p:"일광 광장",len:50,disc:["skylight","baduk","gwanbat"],bats:1,t:()=>{const h=Math.floor((((S.min%1440)+1440)%1440)/60),a=["고개를 넘자 넓이 50m, 높이 30m의 광장이 열린다. 꼭대기에 뚫린 구멍으로 하늘이 보인다."];
         if(raining()) a.push(S.wx==="storm"?"천창으로 빗물이 폭포처럼 쏟아져 광장 한가운데를 때린다. 물보라가 여기까지 튄다.":"천창에서 빗줄기가 가늘게 떨어진다. 바닥 한가운데가 젖어 반짝인다.");
@@ -854,20 +886,20 @@ CAVES.ilgwang={lv:5,tip:"윗입구는 수직 70m! 로프 두 동을 이어 쓸 �
          {t:"로프를 타고 70m를 올라 윗입구로 나간다",gear:1,srt:1,if:()=>S.f.rig70&&has("srt"),go:"pitch",cls:"back",cost:{sta:16}},
          {t:"돌고개를 넘어 입구 쪽으로",go:"ridge",cls:"back",cost:{sta:4}}]},
     upper:{p:"윗입구",len:15,disc:[],t:()=>["숲속에 땅이 둥글게 꺼져 있다. 가장자리 이끼를 젖히자 아래로 까마득한 어둠이 뚫려 있다.","돌을 떨어뜨리니 한참 뒤에야 바닥에 닿는 소리가 난다. 수직 70m. 저 아래가 일광 광장이다.",raining()?"빗물이 구멍 가장자리로 모여 아래로 쏟아진다. 하강 중에 저 물줄기를 맞게 된다.":""].filter(Boolean),
-      c:[{t:"앵커를 박고 로프 두 동을 이어 하강한다",gear:1,srt:1,if:()=>has("srt")&&ropeTot()>=75,go:"pitch",cost:{sta:6},do:()=>{S.f.rig70=1;if(raining()&&Math.random()<(S.wx==="storm"?.7:.5)&&!S.f.stuckDone){S.f.stuck=1;}return null;}},
+      c:[{t:"앵커를 박고 로프 두 동을 이어 하강한다",gear:1,srt:1,if:()=>has("srt")&&ropeTot()>=75,go:"pitch",cost:{sta:6},do:()=>{S.f.rig70=1;if(raining()&&Math.random()<(S.wx==="storm"?.7:.5)*(1-PS("cows")*.06)&&!S.f.stuckDone){S.f.stuck=1;}return null;}},
          {t:"산 중턱으로 내려간다",go:"slope",cls:"back"}],
       hint:()=>has("srt")&&ropeTot()>=75?null:"70m 수직굴이다. SRT 장비와, 앵커 여유까지 75m 이상의 로프가 필요하다. 60m와 15m처럼 두 동을 이어도 된다."},
     pitch:{p:"70m 수직 하강",len:70,disc:[],norest:1,t:()=>S.f.stuck?["중간 매듭에서 하강기를 갈아 달다 손이 미끄러졌다. 줄 갈아타기에 실패해 매듭 위에 매달린 채 꼼짝할 수 없다.","천창으로 들이친 빗물이 폭포처럼 머리 위로 쏟아진다. 숨쉬기도 힘들다. 몸이 빠르게 식는다."]
         :["로프에 매달려 천천히 내려간다. 머리 위 천창이 동전만큼 작아지고, 발아래 광장이 아득하다.",raining()?"빗물이 로프를 타고 흘러내려 손이 시리다.":"중간 매듭에서 하강기를 매듭 아래로 옮겨 단다. 손이 떨린다."],
-      c:[{t:"카우스 테일로 자기 확보부터 하고 차근차근 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{S.f.stuck=0;S.f.stuckDone=1;S.min+=90;S.tmp-=24;S.sta-=14;const g=!P.relics.wetglove&&!(S.relicDrops||[]).includes("wetglove");if(g){S.relicDrops=S.relicDrops||[];S.relicDrops.push("wetglove");}return {t:"쏟아지는 물을 맞으며 한 시간 반을 매달렸다. 카우스 테일을 걸고, 숨을 고르고, 하나씩 다시 걸었다. 마침내 하강기가 매듭 아래로 넘어갔다. 체온 −24 · 체력 −14."+(g?" 유물 발견! '그날의 젖은 장갑'. 무사히 탈굴해야 기록된다.":""),rec:1};}},
-         {t:"서둘러 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{S.min+=30;if(Math.random()<.45){S.f.stuck=0;S.f.stuckDone=1;S.tmp-=10;S.sta-=10;return {t:"손이 떨렸지만 단번에 넘어갔다. 체온 −10 · 체력 −10.",rec:1};}S.tmp-=14;S.sta-=12;return {t:"또 미끄러졌다. 물은 계속 쏟아진다. 체온 −14 · 체력 −12.",bad:1};}},
+      c:[{t:"카우스 테일로 자기 확보부터 하고 차근차근 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{const hm=hangMin(),tl=24-PS("cows");S.f.stuck=0;S.f.stuckDone=1;S.min+=hm;S.tmp-=tl;S.sta-=14;const g=!P.relics.wetglove&&!(S.relicDrops||[]).includes("wetglove");if(g){S.relicDrops=S.relicDrops||[];S.relicDrops.push("wetglove");}return {t:`쏟아지는 물을 맞으며 ${hm>=90?"한 시간 반":hm+"분"}을 매달렸다. 카우스 테일을 걸고, 숨을 고르고, 하나씩 다시 걸었다. 마침내 하강기가 매듭 아래로 넘어갔다. 체온 −${tl} · 체력 −14.`+(g?" 유물 발견! '그날의 젖은 장갑'. 무사히 탈굴해야 기록된다.":""),rec:1};}},
+         {t:"서둘러 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{S.min+=30;if(Math.random()<.45+cowsBon()){S.f.stuck=0;S.f.stuckDone=1;S.tmp-=10;S.sta-=10;return {t:"손이 떨렸지만 단번에 넘어갔다. 체온 −10 · 체력 −10.",rec:1};}S.tmp-=14;S.sta-=12;return {t:"또 미끄러졌다. 물은 계속 쏟아진다. 체온 −14 · 체력 −12.",bad:1};}},
          {t:"광장 바닥까지 내려간다",gear:1,srt:1,if:()=>!S.f.stuck,go:"plaza",cost:{sta:8}},
          {t:"상승기로 윗입구까지 올라간다",gear:1,srt:1,if:()=>!S.f.stuck,go:"upper",cls:"back",cost:{sta:22}}]},
     inner:{p:"안쪽 탐사 구간",len:80,disc:["millipede","column","straw"],t:()=>["광장 뒤편으로 동굴이 이어진다. 빛이 닿지 않는 진짜 어둠이다.","기둥과 가는 빨대 종유석 사이를 지나면 길이 5m 벽 앞에서 끊긴다."],
       c:[{t:"5m 벽으로",go:"wall"},{t:"일광 광장으로 돌아간다",go:"plaza",cls:"back"}]},
     wall:{p:"5m 벽",len:5,disc:[],t:()=>["짧지만 미끈한 유석 벽. 위쪽으로 좁은 구멍이 보인다.",S.f.ilHand?"설치해 둔 핸드라인이 드리워져 있다.":"벽 위 바위 기둥에 줄을 걸 수 있을 것 같다."],
       c:[{t:()=>S.f.ilHand?"핸드라인을 잡고 오른다":"로프로 핸드라인을 걸고 오른다",gear:1,if:()=>S.f.ilHand||ropeLen()>=15,go:"crawl",cost:{sta:6},do:()=>{S.f.ilHand=1;return null;}},
-         {t:"맨손으로 기어오른다",if:()=>!S.f.ilHand&&ropeLen()<15,go:"crawl",cost:{sta:16},do:()=>Math.random()<.35?{t:"두 번 미끄러져 팔꿈치가 까졌다.",bad:1}:null},
+         {t:"맨손으로 기어오른다",if:()=>!S.f.ilHand&&ropeLen()<15,go:"crawl",cost:{sta:16},do:()=>Math.random()<.35*fallMul()?{t:"두 번 미끄러져 팔꿈치가 까졌다.",bad:1}:null},
          {t:"안쪽 탐사 구간으로 돌아간다",go:"inner",cls:"back"}]},
     crawl:{p:"기어가는 구간",len:25,disc:[],enter:()=>{S.tmp-=4;},t:()=>["벽 위 구멍으로 들어가자 천장이 등에 닿는다. 배를 깔고 팔꿈치로 기어야 한다.","흙이 차갑다. 몸이 서서히 식는다."],
       c:[{t:"끝까지 기어간다",go:"end",cost:{sta:8}},{t:"5m 벽으로 물러나 내려간다",go:"wall",cls:"back",cost:{sta:6}}]},
@@ -1164,7 +1196,7 @@ const RELICS=[
 const relicAt=(cv,node)=>RELICS.find(x=>x.cave===cv&&x.node===node&&!P.relics[x.id]&&!(S.relicDrops||[]).includes(x.id));
 function tryRelic(node){
   const x=relicAt(S.cave,node); if(!x) return;
-  if(Math.random()>Math.min(.9,.3+dlv()*.06)) return;
+  if(Math.random()>Math.min(.95,.3+dlv()*.06+findBon())) return;
   S.relicDrops=S.relicDrops||[]; S.relicDrops.push(x.id);
   pushMsg({t:`유물 발견! '${x.n}'. 과거 탐사자의 흔적이다. 무사히 탈굴해야 기록된다.`,rec:1});
 }
@@ -1220,8 +1252,9 @@ function deathCheck(){
 function moveTo(id,ch){
   const sc=SCN()[id];
   const cost=typeof ch?.cost==="function"?ch.cost():(ch?.cost||{});
-  S.sta-=5+Math.round((cost.sta||0)*(ch&&ch.srt?srtMul():(has("outer")?.7:1)))+(dy().escort?3:0);
+  S.sta-=5+Math.round((cost.sta||0)*(ch&&ch.srt?srtDir(ch).mul:(has("outer")?.7:1)))+(dy().escort?3:0);
   S.min+=25+Math.round((cost.sta||0)*2)+(dy().escort?10:0)+(sc.wet?10:0);
+  if(ch&&ch.srt) S.min=Math.max(0,S.min-srtDir(ch).min);
   S.tmp-=has("inner")?1:2;
   if(ch&&ch.cls==="back"&&svDone(S.cave)){S.sta+=2;S.min-=10;}
   const fx=wxFx(),mul=S.wx==="storm"?2:1,wv=(sc.wet||0)+(fx&&fx.wet&&fx.wet[id]?fx.wet[id]*mul:0);
@@ -2482,7 +2515,7 @@ function renderMe(){
     const store=Object.keys(GEAR).filter(k=>k!=="helmet").map(k=>`<button class="slot store ${own(k)?'':'none'} ${lkSel===k?'sel':''}" data-k="${k}" aria-label="${GEAR[k].n} 담기">${ico(k)}${lenTag(k)}${P.loadout[k]?`<b class="cnt">${P.loadout[k]}</b>`:""}<span class="own">${own(k)}</span></button>`).join("");
     body=`<div class="eqwin"><div class="eqcol">${L.map(sv).join("")}</div>
       <div class="eqmid"><canvas id="meCv" aria-hidden="true"></canvas>
-        <div class="eqstat"><span>램프 배터리 <b>×${lampMul().toFixed(2)}</b></span><span>빛 범위 <b>×${lampRad().toFixed(2)}</b></span><span>SRT 성능 <b>${srtQ().toFixed(1)}</b></span><span>로프 구간 <b>×${srtMul().toFixed(2)}</b></span></div>
+        ${eqStat(meSel)}
         <div class="eqdet ${TIER_CLS[g.t]}"><div class="tx"><b>${upName(meSel)} <small class="en">+${g.e}</small></b><span class="br">${upBrand(meSel)} 장착 중</span><span class="meta">강화·교체는 종모산악</span></div></div></div>
       <div class="eqcol">${Rr.map(sv).join("")}</div></div>
       <div class="lkrow"><b class="lkt">기본 휴대 세트</b><small>창고 누르면 담기 · 배낭 누르면 빼기</small></div>
@@ -2680,19 +2713,19 @@ function renderUpgrade(){
     <div class="eqwin">
       <div class="eqcol">${L.map(eqSlot).join("")}</div>
       <div class="eqmid"><canvas id="eqCv" aria-hidden="true"></canvas>
-        <div class="eqstat"><span>램프 배터리 <b>×${lampMul().toFixed(2)}</b></span><span>빛 범위 <b>×${lampRad().toFixed(2)}</b></span><span>SRT 성능 <b>${srtQ().toFixed(1)}</b></span><span>로프 구간 체력 <b>×${srtMul().toFixed(2)}</b></span></div>
+        ${eqStat(upSel)}
         <div class="eqenh">${ico("gas")}<span>강화기 <b>${P.enh}</b></span><button class="mini" id="buyEnh" ${P.money<ENH_P?'disabled':''}>+1 ${won(ENH_P)}</button></div>
       </div>
       <div class="eqcol">${Rr.map(eqSlot).join("")}</div>
     </div>
     <div class="eqdet ${TIER_CLS[g.t]}">${ico(upSel==="lamp"?"helmet":PART_ICON[upSel],"big")}
-      <div class="tx"><b>${upName(upSel)} <small class="en">+${g.e}</small></b><span class="br">${upBrand(upSel)}</span><span class="stars">${stars}</span></div>
+      <div class="tx"><b>${upName(upSel)} <small class="en">+${g.e}</small></b><span class="br">${upBrand(upSel)}</span><span class="stars">${stars}</span><span class="role"><em>역할</em>${ROLE[upSel]}</span></div>
       <div class="upbtn">
         ${nx?`<button class="use ub" id="upBrand" ${P.money<nx.p?'disabled':''}>${nx.n}<small>${won(nx.p)}</small></button>`:`<span class="maxb">최고 브랜드</span>`}
         <button class="use eb" id="upEnh" ${g.e>=5||P.enh<1?'disabled':''}>강화<small>${g.e>=5?"최고 단계":`성공 ${rate}%`}</small></button>
-      </div></div>
+      </div>${effTable(upSel)}</div>
     ${shopMsg?`<div class="shopmsg">${shopMsg}</div>`:""}
-    <p class="shopnote">테두리 색: 회색 보급형 · 파랑 중급 · 금색 최고급. 브랜드를 바꾸면 +0부터 다시. +3부터 실패하면 한 단계 떨어질 수 있다.${own("srt")?"":" SRT 부품은 SRT 장비가 창고에 있어야 실제로 쓸 수 있다."}</p>
+    <p class="shopnote">부품마다 역할이 다르다. 노란 칸이 고른 장비가 올려 주는 수치. 테두리 색: 회색 보급형 · 파랑 중급 · 금색 최고급. 브랜드를 바꾸면 +0부터 다시. +3부터 실패하면 한 단계 떨어질 수 있다.${own("srt")?"":" SRT 부품은 SRT 장비가 창고에 있어야 실제로 쓸 수 있다."}</p>
   </div>`;
   // 가운데 캐릭터
   const cv=$("eqCv"),c=mkCtx(cv,40,44);R(c,0,0,40,44,"#eef3f7");for(let x=0;x<40;x+=4)R(c,x,40,2,4,"#dfe7ee");
@@ -2721,7 +2754,7 @@ function render(){
   const svc=svCount(S.cave,svMerged());
   $("place").innerHTML=`${sc.p}<span>${cave().name} · ${WX[S.wx||"sun"].n}${has("survey")||svc.any?` · 측량 ${svc.ok}/${svc.n}`:""}</span>`;
   let html=sc.t().map(speech).join("");
-  const lm=Math.min(2,lampMode()+detSight());
+  const lm=Math.min(2,lampMode()+detSight()+(lampMode()>0?lampSee():0));
   const hidden=sc.disc.filter(id=>!S.rec.includes(id)&&REC[id].light>lm&&!(REC[id].bat&&S.f.disturbed));
   if(hidden.length) html+=`<p class="faint">어둠 속에 무언가 더 있는 것 같다. 그림 오른쪽 위에서 헤드램프 밝기를 올려 보자.</p>`;
   if(sc.hint&&sc.hint()) html+=`<p class="faint">${sc.hint()}</p>`;
