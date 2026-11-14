@@ -441,7 +441,7 @@ body.ontitle .glow{display:none}
 .eqdet .tx{display:flex;flex-direction:column;min-width:0;flex:1}
 .eqdet .tx b{font-family:var(--f-title);font-weight:400;font-size:16px;color:var(--navy)}
 .eqdet .br{font-size:12px;color:var(--ink)}
-.stars{display:flex;gap:2px;margin-top:3px}.stars i{width:9px;height:9px;background:var(--line)}.stars i.on{background:var(--red)}
+.stars{display:flex;gap:2px;margin-top:3px}.stars i{width:7px;height:8px;background:var(--line)}.stars i.on{background:var(--red)}
 @media (max-width:560px){.eqwin{gap:6px}.eqs{width:50px;height:52px}.eqs .ico{width:26px;height:26px}.eqdet{flex-wrap:wrap}.eqdet .upbtn{width:100%;justify-content:flex-end}.eqstat{grid-template-columns:1fr}}
 
 /* ===== 툴바·버튼 한 줄·그림 위 밝기 ===== */
@@ -523,6 +523,10 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 .mwx{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;color:var(--red);margin-top:6px}
 .mwx button{font:inherit;font-size:12px;border:0;background:#fff;color:var(--navy);padding:2px 8px;box-shadow:0 0 0 2px var(--line);cursor:pointer}
 .mwx button.on{background:var(--yellow);box-shadow:0 0 0 2px var(--navy)}
+.mbar2{display:flex;align-items:center;gap:6px;margin:-4px 0 8px;font-size:11px;color:var(--red)}
+.mbar2 span{flex:1}
+.mbar2 button{font:inherit;font-size:11px;border:0;background:#fff;color:var(--red);padding:2px 8px;box-shadow:0 0 0 2px var(--red);cursor:pointer}
+.mbar2 button[data-mt=fill]{background:var(--red);color:#fff}
 .stachip{margin-left:auto;align-self:center;font-size:12px;color:var(--dim);padding:0 4px;white-space:nowrap}
 .stachip b{font-family:var(--f-title);font-weight:400;font-size:15px;color:var(--moss)}.stachip.low b{color:var(--red)}
 .guk{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim);margin:6px 0 8px}
@@ -676,14 +680,15 @@ const PRICE={food:3000,battery:5000,blanket:4000,firstaid:12000,backup:15000,rop
 const LAMP_T=[{n:"기본 헤드램프",p:0},{n:"블랙다이아몬드 헤드램프",p:45000},{n:"페츨 헤드램프",p:90000}];
 const SRT_B=["보급형","클라이밍 테크놀로지","페츨"],SRT_BP=[0,25000,50000];
 const SRT_PARTS=[["harness","하네스"],["maillon","D링(마일론)"],["desc","하강기"],["croll","가슴 등강기"],["hand","핸드 어센더"],["foot","풋 루프"],["cows","카우스 테일"]];
-const ENH_P=8000,ENH_RATE=[.9,.75,.6,.45,.3];
+const ENH_P=8000,ENH_MAX=10,ENH_RATE=[.9,.8,.7,.6,.5,.4,.3,.25,.2,.15];
 function ensureGear(){P.gear=P.gear||{};P.gear.lamp=P.gear.lamp||{t:0,e:0};P.gear.srt=P.gear.srt||{};SRT_PARTS.forEach(([k])=>P.gear.srt[k]=P.gear.srt[k]||{t:0,e:0});if(P.enh==null)P.enh=0;}
-const lampMul=()=>{const g=P.gear.lamp;return Math.max(.5,1-g.t*.12-g.e*.03);};
-const lampRad=()=>{const g=P.gear.lamp;return 1+g.t*.1+g.e*.02;};
+const lampMul=()=>{const g=P.gear.lamp;return Math.max(.5,1-g.t*.12-g.e*.015);};
+const lampRad=()=>{const g=P.gear.lamp;return 1+g.t*.1+g.e*.01;};
 const srtQ=()=>SRT_PARTS.reduce((a,[k])=>a+P.gear.srt[k].t*2+P.gear.srt[k].e,0)/SRT_PARTS.length;
 const srtMul=()=>Math.max(.45,1-srtQ()*.06);
 /* ---- 부품별 역할 ---- */
-const PS=k=>{const g=P.gear.srt[k];return g?g.t*2+g.e:0;};
+const PSR=k=>{const g=P.gear.srt[k];return g?g.t*2+g.e:0;};
+const PS=k=>PSR(k)*9/14;
 const avgPS=ks=>ks.reduce((a,k)=>a+PS(k),0)/ks.length;
 const CLIMB=["croll","hand","foot"],SAFE=["harness","maillon"];
 const descMul=()=>1-PS("desc")*.035, climbMul=()=>1-avgPS(CLIMB)*.04;
@@ -706,9 +711,9 @@ EFF.hand=EFF.croll;EFF.foot=EFF.croll;EFF.maillon=EFF.harness;
 const HI={lamp:[4,5],desc:[0],croll:[1],hand:[1],foot:[1],cows:[2],harness:[3],maillon:[3]};
 function eqStat(sel){const cells=[["하강 체력","×"+descMul().toFixed(2)],["오름 체력","×"+climbMul().toFixed(2)],["갈아타기","+"+pc(cowsBon())+"%"],["추락 위험","×"+fallMul().toFixed(2)],["배터리","×"+lampMul().toFixed(2)],["유물 발견","+"+pc(findBon())+"%"]];
   return `<div class="eqstat">${cells.map(([a,v],i)=>`<span class="${(HI[sel]||[]).includes(i)?'hi':''}">${a} <b>${v}</b></span>`).join("")}</div>`;}
-function effTable(sel){const g=upGear(sel),rows=EFF[sel]||[];const now=rows.map(r=>r[1]());let nxt=null;if(g.e<5){g.e++;nxt=rows.map(r=>r[1]());g.e--;}
-  const sc=sel==="lamp"?null:PS(sel);
-  return `<table class="efft"><tr><td></td><td class="n h">지금</td><td class="u h">다음 강화</td></tr>${sc!=null?`<tr><td>부품 점수</td><td class="n">${sc} / 9<span class="pbar2"><i style="width:${Math.round(sc/9*100)}%"></i></span></td><td class="u">${g.e<5?"+"+(g.e+1)+" → "+(sc+1):"최고"}</td></tr>`:""}${rows.map((r,i)=>`<tr><td>${r[0]}</td><td class="n">${now[i]}</td><td class="u">${nxt?(nxt[i]===now[i]?"-":"→ "+nxt[i]):"최고"}</td></tr>`).join("")}</table>`;}
+function effTable(sel){const g=upGear(sel),rows=EFF[sel]||[];const now=rows.map(r=>r[1]());let nxt=null;if(g.e<ENH_MAX){g.e++;nxt=rows.map(r=>r[1]());g.e--;}
+  const sc=sel==="lamp"?null:PSR(sel);
+  return `<table class="efft"><tr><td></td><td class="n h">지금</td><td class="u h">다음 강화</td></tr>${sc!=null?`<tr><td>부품 점수</td><td class="n">${sc} / 14<span class="pbar2"><i style="width:${Math.round(sc/14*100)}%"></i></span></td><td class="u">${g.e<ENH_MAX?"+"+(g.e+1)+" → "+(sc+1):"최고"}</td></tr>`:""}${rows.map((r,i)=>`<tr><td>${r[0]}</td><td class="n">${now[i]}</td><td class="u">${nxt?(nxt[i]===now[i]?"-":"→ "+nxt[i]):"최고"}</td></tr>`).join("")}</table>`;}
 const ROPE_LEN={rope15:15,rope:30,rope45:45,rope60:60};
 const ropeTot=()=>Object.keys(ROPE_LEN).reduce((a,k)=>a+(S.inv[k]||0)*ROPE_LEN[k],0);
 const ropeLen=()=>Object.keys(ROPE_LEN).reduce((m,k)=>has(k)?Math.max(m,ROPE_LEN[k]):m,0);
@@ -2540,7 +2545,7 @@ function renderMe(){
     body=`<div class="dexhd"><b>${Object.keys(P.relics).length}</b> / ${RELICS.length}개 · 과거에 다녀간 탐사자의 흔적</div>
       <div class="relics">${RELICS.map(x=>{const g=P.relics[x.id];const cv=x.cave==="gm"?"광명동굴":CAVES[x.cave].name;return `<div class="relic ${g?'on':''}"><div class="rhd"><span class="rimg">${g?rico(x.id,"helmet","big"):"<i>?</i>"}</span><div><b>${g?x.n:"???"}</b><small>${cv}</small></div></div><span>${g?x.d:"아직 찾지 못했다. 탐지 능력이 높을수록 잘 찾는다."}</span></div>`;}).join("")}</div>`;
   }
-  $("story").innerHTML=`<div class="frame me">${tabs}${body}</div>`;
+  $("story").innerHTML=`<div class="frame me">${tabs}${mBar(meTab==="gear"?"gear":meTab)}${body}</div>`;
   document.querySelectorAll(".me .stabs button").forEach(b=>b.onclick=()=>{meTab=b.dataset.t;lkMsg="";renderMe();});
   const cv=$("meCv"); if(cv){const c=mkCtx(cv,40,44);R(c,0,0,40,44,"#eef3f7");for(let x=0;x<40;x+=4)R(c,x,40,2,4,"#dfe7ee");const inv0=S.inv;S.inv={srt:own("srt")?1:0,rope:1};drawCaver(c,20,40,{});S.inv=inv0;}
   document.querySelectorAll(".me .eqs").forEach(b=>b.onclick=()=>{meSel=b.dataset.id;renderMe();});
@@ -2662,6 +2667,7 @@ function renderShop(){
     ${ownerBox()}
     ${gukRow()}
     ${shopTabs()}
+    ${mBar(shopTab==="up"?"gear":"stock")}
     <div class="shopgrid">${items.map(k=>`<button class="sitem ${shopSel===k?'sel':''} ${P.money<PRICE[k]?'poor':''}" data-k="${k}" aria-label="${GEAR[k].n} ${won(PRICE[k])}" title="${GEAR[k].n}">
       <span class="slot">${ico(k)}${lenTag(k)}${own(k)?`<b class="cnt">${own(k)}</b>`:""}</span><span class="pr">${shortWon(PRICE[k])}</span></button>`).join("")}</div>
     <div class="tip">${ico(shopSel,"big")}<div class="tx"><b>${g.n}</b><span>${g.d}</span><span class="meta">${g.slot}칸 · ${g.use?"쓰면 없어지는 소모품":"한 번 사면 계속 쓰는 장비"} · 보유 ${own(shopSel)}</span></div>
@@ -2688,7 +2694,7 @@ function shopBack(){const box=$("choices"); box.innerHTML="";
 function shopTabs(){return `<div class="stabs"><button class="${shopTab==='trade'?'on':''}" data-t="trade">사고팔기</button><button class="${shopTab==='up'?'on':''}" data-t="up">장비 강화</button></div>`;}
 function wireTabs(){document.querySelectorAll(".stabs button").forEach(b=>b.onclick=()=>{shopTab=b.dataset.t;shopMsg="";renderShop();});}
 function enhance(g,name){
-  if(g.e>=5){shopMsg=`${name}: 이미 최고 강화(+5)다.`;return;}
+  if(g.e>=ENH_MAX){shopMsg=`${name}: 이미 최고 강화(+${ENH_MAX})다.`;return;}
   if(P.enh<1){shopMsg="강화기가 없다. 아래에서 먼저 사자.";return;}
   P.enh--;const rate=ENH_RATE[g.e];
   if(Math.random()<rate+(dexHas(20)?.1:0)){g.e++;shopMsg=`강화 성공! ${name} +${g.e}`;}
@@ -2708,12 +2714,13 @@ function renderUpgrade(){
   hud(); drawBag(); drawBook(); artShow(0); $("logSec").hidden=true;
   $("place").innerHTML="장비점 · 강화";
   const L=["lamp","harness","maillon","desc"],Rr=["croll","hand","foot","cows"];
-  const g=upGear(upSel),nx=upNext(upSel),rate=g.e<5?Math.round(ENH_RATE[g.e]*100):0;
-  const stars=Array.from({length:5},(_,i)=>`<i class="${i<g.e?'on':''}"></i>`).join("");
+  const g=upGear(upSel),nx=upNext(upSel),rate=g.e<ENH_MAX?Math.round(ENH_RATE[g.e]*100):0;
+  const stars=Array.from({length:ENH_MAX},(_,i)=>`<i class="${i<g.e?'on':''}"></i>`).join("");
   $("story").innerHTML=`<div class="frame shop">
     <div class="ttl">${ptxt("종모산악",{size:12,shadow:"#fff4c4"})}<span>보유 자금 <b class="cash">${won(P.money)}</b></span></div>
     ${ownerBox()}
     ${shopTabs()}
+    ${mBar(shopTab==="up"?"gear":"stock")}
     <div class="eqwin">
       <div class="eqcol">${L.map(eqSlot).join("")}</div>
       <div class="eqmid"><canvas id="eqCv" aria-hidden="true"></canvas>
@@ -2726,10 +2733,10 @@ function renderUpgrade(){
       <div class="tx"><b>${upName(upSel)} <small class="en">+${g.e}</small></b><span class="br">${upBrand(upSel)}</span><span class="stars">${stars}</span><span class="role"><em>역할</em>${ROLE[upSel]}</span></div>
       <div class="upbtn">
         ${nx?`<button class="use ub" id="upBrand" ${P.money<nx.p?'disabled':''}>${nx.n}<small>${won(nx.p)}</small></button>`:`<span class="maxb">최고 브랜드</span>`}
-        <button class="use eb" id="upEnh" ${g.e>=5||P.enh<1?'disabled':''}>강화<small>${g.e>=5?"최고 단계":`성공 ${rate}%`}</small></button>
+        <button class="use eb" id="upEnh" ${g.e>=ENH_MAX||P.enh<1?'disabled':''}>강화<small>${g.e>=ENH_MAX?"최고 단계":`성공 ${rate}%`}</small></button>
       </div>${effTable(upSel)}</div>
     ${shopMsg?`<div class="shopmsg">${shopMsg}</div>`:""}
-    <p class="shopnote">부품마다 역할이 다르다. 노란 칸이 고른 장비가 올려 주는 수치. 테두리 색: 회색 보급형 · 파랑 중급 · 금색 최고급. 브랜드를 바꾸면 +0부터 다시. +3부터 실패하면 한 단계 떨어질 수 있다.${own("srt")?"":" SRT 부품은 SRT 장비가 창고에 있어야 실제로 쓸 수 있다."}</p>
+    <p class="shopnote">부품마다 역할이 다르다. 노란 칸이 고른 장비가 올려 주는 수치. 테두리 색: 회색 보급형 · 파랑 중급 · 금색 최고급. 브랜드를 바꾸면 +0부터 다시. +10까지. +3부터 실패하면 한 단계 떨어질 수 있다.${own("srt")?"":" SRT 부품은 SRT 장비가 창고에 있어야 실제로 쓸 수 있다."}</p>
   </div>`;
   // 가운데 캐릭터
   const cv=$("eqCv"),c=mkCtx(cv,40,44);R(c,0,0,40,44,"#eef3f7");for(let x=0;x<40;x+=4)R(c,x,40,2,4,"#dfe7ee");
@@ -2855,13 +2862,24 @@ $("toTitle").onclick=()=>{if(S.phase==="cave"&&!confirmLeave())return;showTitle(
 $("nvMap").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;selCave=null;newRun();renderMap();window.scrollTo(0,0);};
 $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
+const MSCOPE={pro:"프로필·진행",gear:"장비 강화",dex:"도감",relic:"유물",map:"측량도",stock:"창고"};
+function mBar(sc){return MASTER&&MSCOPE[sc]?`<div class="mbar2"><span>마스터 · ${MSCOPE[sc]}</span><button data-ms="${sc}" data-mt="reset">초기화</button><button data-ms="${sc}" data-mt="fill">완성</button></div>`:"";}
+function masterAct(sc,act){const F=act==="fill";
+  if(sc==="pro"){P.detxp=F?DET_XP[DET_XP.length-1]:0;P.money=F?9999999:60000;P.trips=F?Math.max(P.trips||0,30):0;P.endings=F?Object.keys(ENDINGS):[];P.permits=F?Object.fromEntries(PLAYABLE.map(id=>[id,1])):{};PLAYABLE.forEach(id=>{const c=cp(id);c.goal=F?1:0;if(!F)c.runs=0;});P.sta=F?staMax():100;P.staT=Date.now();}
+  if(sc==="gear"){const v=F?{t:2,e:ENH_MAX}:{t:0,e:0};P.gear.lamp={...v};SRT_PARTS.forEach(([k])=>P.gear.srt[k]={...v});P.enh=99;}
+  if(sc==="dex") PLAYABLE.forEach(id=>{cp(id).recs=F?[...CAVES[id].recs]:[];});
+  if(sc==="relic"){P.relics={};if(F)RELICS.forEach(x=>P.relics[x.id]=1);}
+  if(sc==="map") PLAYABLE.forEach(id=>{const c=cp(id);c.sv={};c.svDone=F?1:0;if(F)Object.keys(CAVES[id].nodes).forEach(k=>c.sv[k]=2);});
+  if(sc==="stock"){P.stock={};if(F)Object.keys(GEAR).forEach(k=>{if(k!=="helmet")P.stock[k]=5;});if(!F)P.loadout={};}
+  saveP();toast(`마스터: ${MSCOPE[sc]} ${F?"완성":"초기화"}`);render();}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-mt]");if(!b||!MASTER)return;masterAct(b.dataset.ms,b.dataset.mt);});
 function masterFill(){
   RELICS.forEach(x=>P.relics[x.id]=1);
   P.detxp=Math.max(P.detxp||0,DET_XP[DET_XP.length-1]);
   PLAYABLE.forEach(id=>{const c=cp(id);c.recs=[...new Set([...(c.recs||[]),...CAVES[id].recs])];const o=svOf(id);Object.keys(CAVES[id].nodes).forEach(k=>o[k]=2);c.svDone=1;});
   saveP();
 }
-if(MASTER) masterFill();
+if(MASTER&&!P.mInit){masterFill();P.mInit=1;saveP();}
 newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 : 마스터";}
 </script>
 
