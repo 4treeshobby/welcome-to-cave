@@ -123,7 +123,7 @@ h1{margin:0}
 .story .bad{color:var(--danger);background:#fdece8;box-shadow:inset 4px 0 0 var(--danger)}
 .story .rec{font-family:var(--f-ui);font-size:14px;color:var(--moss);background:#eef6e8;padding:6px 10px;box-shadow:inset 4px 0 0 var(--moss)}
 .story .faint{color:var(--dim);font-style:italic}
-.fade{animation:fade .45s steps(4) both}
+.fade{animation:fade .45s steps(4) backwards}
 @keyframes fade{from{opacity:.2}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.fade{animation:none}.fill{transition:none}}
 
@@ -1392,7 +1392,7 @@ function syncNav(){
   $("nvBook").textContent=S.cave?`${new Set([...cp(S.cave).recs,...S.rec]).size}/${cave().recs.length}`:"";
   $("nvLog").textContent=`${P.endings.length}/${Object.keys(ENDINGS).length}`;
 }
-function animate(){syncNav();const s=$("scene");s.classList.remove("fade");void s.offsetWidth;s.classList.add("fade");}
+let fadeT=0;function animate(){syncNav();const s=$("scene");s.classList.remove("fade");s.style.opacity="";void s.offsetWidth;s.classList.add("fade");clearTimeout(fadeT);fadeT=setTimeout(()=>s.classList.remove("fade"),600);}
 
 function hud(){
   const inCave=S.phase==="cave"||S.phase==="end";
