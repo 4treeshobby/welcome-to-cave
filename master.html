@@ -1137,15 +1137,17 @@ async function initCloud(){
 }
 let P=loadP();ensureP();
 const cp=id=>P.caves[id]||(P.caves[id]={recs:[],goal:0,runs:0});
-const xp=()=>Object.keys(P.caves).reduce((a,id)=>a+P.caves[id].recs.length*10+(P.caves[id].goal?20:0),0)+(P.trips||0)*5;
-const LV_XP=[0,20,50,90,140,200,270,350,440,540];
+const xp=()=>Object.keys(P.caves).reduce((a,id)=>a+P.caves[id].recs.length*5+(P.caves[id].goal?30:0)+(P.caves[id].svDone?30:0),0)+(P.trips||0)*5+Object.keys(P.relics||{}).length*10;
+const LV_XP=[0,40,100,180,280,400,550,720,920,1150];
 const plvOf=x=>{let l=1;LV_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
 const plv=()=>MASTER?10:plvOf(xp());
 const STA_MIN=30;
+const staMax=()=>100+(plv()-1)*5;
+const clampSta=v=>Math.max(0,Math.min(staMax(),v));
 const staIv=()=>(90-(plv()-1)*10/3)*1000;
-function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
+function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(staMax(),P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
 const staMin=v=>Math.max(0,Math.ceil((v-staNow())*staIv()/60000));
-const staTxt=()=>Math.floor(staNow())>=100?"가득 참":`${staMin(100)}분 뒤 가득`;
+const staTxt=()=>Math.floor(staNow())>=staMax()?"가득 참":`${staMin(staMax())}분 뒤 가득`;
 function staChip(){const el=$("staChip");if(!el)return;const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`${MASTER?'<span style="color:var(--red)">마스터</span> · ':''}체력 <b>${v}</b>`;el.title=staTxt();}
 setInterval(()=>{try{if(S&&S.phase!=="cave")staChip();}catch(e){}},30000);
 const DET_XP=[0,10,25,45,70,100,140,190,250,320];
@@ -1254,7 +1256,7 @@ function deathCheck(){
 function moveTo(id,ch){
   const sc=SCN()[id];
   const cost=typeof ch?.cost==="function"?ch.cost():(ch?.cost||{});
-  S.sta-=5+Math.round((cost.sta||0)*(ch&&ch.srt?srtDir(ch).mul:(has("outer")?.7:1)))+(dy().escort?3:0);
+  S.sta-=3+Math.round((cost.sta||0)*(ch&&ch.srt?srtDir(ch).mul:(has("outer")?.7:1)))+(dy().escort?3:0);
   S.min+=25+Math.round((cost.sta||0)*2)+(dy().escort?10:0)+(sc.wet?10:0);
   if(ch&&ch.srt) S.min=Math.max(0,S.min-srtDir(ch).min);
   S.tmp-=has("inner")?1:2;
@@ -1279,7 +1281,7 @@ function moveTo(id,ch){
   if(!S.f['r_'+id]){S.f['r_'+id]=1;tryRelic(id);}
   if(sc.bats&&lampMode()===2) disturb();
   if(sc.enter) sc.enter();
-  S.sta=clamp(S.sta); S.tmp=clamp(S.tmp);
+  S.sta=clampSta(S.sta); S.tmp=clamp(S.tmp);
   warn();
   const e=deathCheck(); if(e) return end(e);
   render();
@@ -1288,7 +1290,7 @@ function moveTo(id,ch){
 function pick(ch){
   msg=[]; sheet=null;
   if(ch.do) pushMsg(ch.do());
-  S.sta=clamp(S.sta);S.tmp=clamp(S.tmp);
+  S.sta=clampSta(S.sta);S.tmp=clamp(S.tmp);
   if(ch.end) return end(ch.end);
   if(ch.exit) return end(dy().escort?"together":S.f.goal?"goal":"back");
   if(ch.go) return moveTo(ch.go,ch);
@@ -1345,16 +1347,16 @@ const OBS_FAIL={
 const obsP=id=>{const F=OBS_FAIL[id];if(!F)return 0;let p=F.p*Math.max(.3,1-dlv()*.07);if(F.bat)p+=lampMode()===2?.15:lampMode()===0?-.08:0;return Math.max(.03,p);};
 function record(id){msg=[];S.min+=10;
   const F=OBS_FAIL[id];
-  if(F&&Math.random()<obsP(id)){S.sta=clamp(S.sta-(F.sta||0));S.tmp=clamp(S.tmp-(F.tmp||0));if(F.bat)S.f.disturbed=1;
+  if(F&&Math.random()<obsP(id)){S.sta=clampSta(S.sta-(F.sta||0));S.tmp=clamp(S.tmp-(F.tmp||0));if(F.bat)S.f.disturbed=1;
     pushMsg({t:`${F.t} 관찰 실패.${F.sta?` 체력 −${F.sta}.`:""}${F.tmp?` 체온 −${F.tmp}.`:""}${F.bat?" 동면을 방해했다. 이번 지원금이 깎인다.":" 조심해서 다시 해 보자."}`,bad:1});
     warn();const e=deathCheck();if(e)return end(e);render();return;}
   S.rec.push(id);gainDet(1);pushMsg({t:`탐사 기록장에 적었다: ${REC[id].n} · 관찰과 기록에 10분`,rec:1});render();}
 function useItem(k){
   msg=[];
   if(k==="battery"){take(k);S.bat=100;S.usingBk=0;pushMsg("헤드램프 배터리를 새것으로 갈았다. 100%.");}
-  if(k==="food"){take(k);S.sta=clamp(S.sta+25);S.tmp=clamp(S.tmp+5);pushMsg("양갱과 견과류를 꼭꼭 씹어 먹었다. 체력 25, 체온 5 회복.");}
+  if(k==="food"){take(k);S.sta=clampSta(S.sta+25);S.tmp=clamp(S.tmp+5);pushMsg("양갱과 견과류를 꼭꼭 씹어 먹었다. 체력 25, 체온 5 회복.");}
   if(k==="blanket"){take(k);S.tmp=clamp(S.tmp+35);pushMsg("은박 담요로 몸을 감싸고 잠시 웅크렸다. 체온 35 회복.");}
-  if(k==="firstaid"){take(k);S.sta=clamp(S.sta+10);pushMsg("쓸린 손과 무릎을 소독하고 붕대를 감았다. 체력 10 회복.");}
+  if(k==="firstaid"){take(k);S.sta=clampSta(S.sta+10);pushMsg("쓸린 손과 무릎을 소독하고 붕대를 감았다. 체력 10 회복.");}
   warn(); render();
 }
 function setMode(m){
@@ -1395,7 +1397,7 @@ function hud(){
   $("place").hidden=!["cave","event","prep"].includes(S.phase);
   staChip();
   if(!inCave){document.documentElement.style.setProperty("--light","1");return;}
-  meter("bat",light()); meter("sta",S.sta); meter("tmp",S.tmp);
+  meter("bat",light()); meter("sta",S.sta/staMax()*100);$("staV").textContent=Math.round(S.sta); meter("tmp",S.tmp);
   $("batLbl").textContent=S.usingBk?"보조 조명":"헤드램프";
   $("mBat").classList.toggle("low",light()<=20);
   $("mSta").classList.toggle("low",S.sta<=25);
@@ -2497,7 +2499,7 @@ function renderMe(){
       <div class="pstats">
         <div class="prow"><span>탐사자</span><b>Lv.${l}</b>${bar(x,LV_XP[l-1],LV_XP[l])}<small>경력 ${x}${LV_XP[l]?` / ${LV_XP[l]}`:" · 최고"}</small></div>
         <div class="prow"><span>탐지 능력</span><b>Lv.${dl}</b>${bar(dx,DET_XP[dl-1],DET_XP[dl])}<small>경험 ${dx}${DET_XP[dl]?` / ${DET_XP[dl]}`:" · 최고"}</small></div>
-        <div class="prow"><span>체력</span><b>${Math.floor(staNow())}</b>${bar(staNow(),0,100)}<small>${staTxt()} · ${Math.round(staIv()/1000)}초에 1씩 회복</small></div>
+        <div class="prow"><span>체력</span><b>${Math.floor(staNow())} / ${staMax()}</b>${bar(staNow(),0,staMax())}<small>${staTxt()} · ${Math.round(staIv()/1000)}초에 1씩 회복</small></div>
         <div class="prow"><span>보유 자금</span><b>${won(P.money)}</b></div>
         <div class="prow"><span>무사 탈굴</span><b>${P.trips||0}회</b><small>완주한 동굴 ${done}곳</small></div>
         <div class="prow"><span>배낭</span><b>${cap()}칸</b><small>도감 ${dexN()}종 · 유물 ${Object.keys(P.relics).length}개</small></div>
@@ -2648,7 +2650,7 @@ function drawOwner(){
 let shopFrom="map", shopSel="food", shopMsg="", shopTab="trade";
 function openShop(from){shopFrom=from;S.phase="shop";shopMsg="";ownerSay=OWNER_HI[Math.floor(Math.random()*OWNER_HI.length)];renderShop();window.scrollTo(0,0);}
 function gukRow(){const cd=MASTER?0:(P.gukT||0)+3600000-Date.now(),v=Math.floor(staNow());
-  return `<div class="guk"><span><b>사장님 국밥</b> 체력 +30 · ${MASTER?"마스터는 무제한":"한 시간에 한 그릇"} · 지금 체력 ${v}</span><button id="gukb" ${cd>0||P.money<8000||v>=100?'disabled':''}>${cd>0?Math.ceil(cd/60000)+"분 뒤":v>=100?"배부름":"₩8,000"}</button></div>`;}
+  return `<div class="guk"><span><b>사장님 국밥</b> 체력 +30 · ${MASTER?"마스터는 무제한":"한 시간에 한 그릇"} · 지금 체력 ${v}</span><button id="gukb" ${cd>0||P.money<8000||v>=staMax()?'disabled':''}>${cd>0?Math.ceil(cd/60000)+"분 뒤":v>=staMax()?"배부름":"₩8,000"}</button></div>`;}
 function renderShop(){
   if(shopTab==="up") return renderUpgrade();
   hud(); drawBag(); drawBook(); artShow(0); $("logSec").hidden=true;
@@ -2670,7 +2672,7 @@ function renderShop(){
     <div class="invgrid"><span class="slot worn" title="헬멧·헤드램프 (착용 중)">${ico("helmet")}</span>${items.filter(k=>own(k)>0).map(k=>`<button class="slot ${shopSel===k?'sel':''}" data-k="${k}" aria-label="${GEAR[k].n} ${own(k)}개">${ico(k)}<b class="cnt">${own(k)}</b></button>`).join("")||`<span class="invempty">아직 산 장비가 없다.</span>`}</div>
   </div>`;
   wireTabs(); drawOwner();
-  const gb=$("gukb"); if(gb) gb.onclick=()=>{staNow();P.money-=8000;P.sta=Math.min(100,P.sta+30);P.gukT=Date.now();saveP();ownerSay="뜨끈하지? 국물까지 싹 비워. 동굴은 체력이야.";shopMsg="국밥 한 그릇 뚝딱. 체력 +30.";renderShop();};
+  const gb=$("gukb"); if(gb) gb.onclick=()=>{staNow();P.money-=8000;P.sta=Math.min(staMax(),P.sta+30);P.gukT=Date.now();saveP();ownerSay="뜨끈하지? 국물까지 싹 비워. 동굴은 체력이야.";shopMsg="국밥 한 그릇 뚝딱. 체력 +30.";renderShop();};
   $("story").querySelectorAll(".sitem,.invgrid .slot[data-k]").forEach(b=>b.onclick=()=>{shopSel=b.dataset.k;shopMsg="";renderShop();});
   $("sell").onclick=()=>{if(!own(shopSel))return;const sp=sellPrice(shopSel);P.stock[shopSel]=own(shopSel)-1;if(!P.stock[shopSel])delete P.stock[shopSel];P.money+=sp;saveP();shopMsg=`${g.n}${josa(g.n)} ${won(sp)}에 팔았다. 남은 수 ${own(shopSel)}개.`;ownerSay="이건 내가 잘 맡아 두지. 필요하면 또 와.";renderShop();};
   $("buy").onclick=()=>{if(P.money<pr){ownerSay="외상은 안 돼~ 탐사 다녀와서 사.";renderShop();return;}ownerSay=ROPE_LEN[shopSel]?"로프는 길이가 생명이야. 피치 깊이보다 넉넉하게!":"좋은 선택이야. 잘 쓰고 무사히 와.";P.money-=pr;P.stock[shopSel]=own(shopSel)+1;saveP();shopMsg=`${g.n}${josa(g.n)} 샀다. 보유 ${own(shopSel)}개.`;renderShop();};
@@ -2835,7 +2837,7 @@ function end(k){
   $("place").textContent="";
   const pre=msg.map(m=>m.t.startsWith("@")?speech(m.t):`<p class="note ${m.bad?'bad':''}">${m.t}</p>`).join("");
   const extra=safe?[dyLine(),S.f.broke?"생성물을 깨뜨린 일은 보고서 한쪽에 따로 적었다.":null,S.f.disturbed?"박쥐 동면을 방해한 일도 함께 보고했다.":null].filter(Boolean):[];
-  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}${svBonus?`<br><span class="lvup">측량도 완성! 종모산악에 납품 +${won(svBonus)} · 다음 입굴부터 갈림길 정보와 빠른 귀환</span>`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>남은 체력 <b>${Math.round(P.sta)}</b> · 쉬는 동안 천천히 회복된다<br>탐사 경력 <b>+${gained}</b> → ${xp()} (무사 탈굴 +5 포함)${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
+  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}${svBonus?`<br><span class="lvup">측량도 완성! 종모산악에 납품 +${won(svBonus)} · 다음 입굴부터 갈림길 정보와 빠른 귀환</span>`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>남은 체력 <b>${Math.round(P.sta)}</b> · 쉬는 동안 천천히 회복된다<br>탐사 경력 <b>+${gained}</b> → ${xp()}${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
     :`이번 기록 ${S.rec.length}개는 동굴에 남았다. 탈굴하지 못한 탐사는 경력과 지원금에 들어가지 않고, 챙겨 간 장비와 찾은 허가증도 잃었다. 몸도 크게 상해 체력이 20으로 떨어졌다.`;
   $("story").innerHTML=`<div class="ending"><div class="tag">${E.kind} · ${cave().name} · 결말 ${keys.indexOf(k)+1} / ${keys.length}</div><div style="margin:4px 0 12px">${ptxt(E.t,{size:16,scale:2,shadow:"#f2b705"})}</div>${pre}${E.d().map(speech).join("")}${extra.map(speech).join("")}<p class="score">${score}</p></div>`;
   const box=$("choices"); box.innerHTML="";
