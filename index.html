@@ -1142,7 +1142,7 @@ const plv=()=>MASTER?10:plvOf(xp());
 const STA_MIN=30;
 const staMax=()=>100+(plv()-1)*5;
 const clampSta=v=>Math.max(0,Math.min(staMax(),v));
-const staIv=()=>(90-(plv()-1)*10/3)*1000;
+const staIv=()=>(45-(plv()-1)*5/3)*1000;
 function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(staMax(),P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
 const staMin=v=>Math.max(0,Math.ceil((v-staNow())*staIv()/60000));
 const staTxt=()=>Math.floor(staNow())>=staMax()?"가득 참":`${staMin(staMax())}분 뒤 가득`;
