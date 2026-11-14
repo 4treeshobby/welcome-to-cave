@@ -522,6 +522,12 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 .guk b{color:var(--navy)}
 .guk button{font:inherit;font-size:12px;border:0;background:var(--yellow);color:var(--navy);padding:3px 10px;box-shadow:0 0 0 2px var(--navy);cursor:pointer;white-space:nowrap}
 .guk button:disabled{background:#eef0f2;color:var(--dim);box-shadow:0 0 0 2px var(--line);cursor:default}
+.relic .rhd{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.relic .rhd>div{display:flex;flex-direction:column;min-width:0}
+.relic .rimg{flex:none;width:40px;height:40px;display:grid;place-items:center;background:#fffdf3;box-shadow:inset 0 0 0 2px var(--line)}
+.relic.on .rimg{box-shadow:inset 0 0 0 2px #e6b84a}
+.relic .rimg img.ico{width:32px!important;height:32px!important;image-rendering:pixelated}
+.relic .rimg i{font-style:normal;color:var(--dim);font-family:var(--f-title)}
 .dexhd{font-size:13px;color:var(--dim);margin-bottom:8px}.dexhd b{font-family:var(--f-title);font-size:20px;color:var(--navy)}
 .relics{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .relic{background:#fff;padding:8px 10px;box-shadow:inset 0 0 0 2px var(--line);font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:2px}
@@ -1403,6 +1409,146 @@ function icon(k){
   return ICON_CACHE[k]=cv.toDataURL();
 }
 const ico=(k,cls="")=>`<img class="ico ${cls}" src="${icon(k)}" alt="">`;
+/* ---- 도감 · 유물 개별 도트 아이콘 ---- */
+const PIXI={
+ gopdeung:[{a:"#c9a27a",b:"#7a4e2a",c:"#a8723e",d:"#1a1010",l:"#5a3a1e"},[
+ "a..............a",".a............a.","..a..........a..","...a........a...","....a......a....",
+ ".....bbbbbbb....","....bccccbbbb...","...bcbbbbbbbbb..","..dbbbbbbbbbbbb.","..bbbbbbbbbbbbb.",
+ "...l..l..l..l.l.","..l..l...l...l.l",".l...l....l....l"]],
+ gwanbat:[{b:"#4a3a3a",w:"#6a5550",n:"#d8a080",e:"#1a1010",t:"#2a2020"},[
+ "......tt........","......tt........",".....bbbb.......","....bnnnnb......","....bneenb......",
+ "...wbbbbbbw.....","..wwbbbbbbww....",".wwwbbbbbbwww...",".wwwwbbbbwwww...","..wwwbbbbwww....",
+ "...ww.bb..ww....","........"]],
+ redbat:[{b:"#e08a2a",w:"#b85a1e",n:"#ffc070",e:"#1a1010",t:"#7a3a10"},[
+ "......tt........","......tt........",".....bbbb.......","....bnnnnb......","....bneenb......",
+ "...wbbbbbbw.....","..wwbbbbbbww....",".wwwbbbbbbwww...",".wwwwbbbbwwww...","..wwwbbbbwww....",
+ "...ww.bb..ww...."]],
+ millipede:[{b:"#3a2a2a",s:"#8a5a3a",l:"#c08a5a",h:"#1a1010"},[
+ "................","..........bbb...",".........bsbsbh.","........bsb..h..",".......bsb......",
+ "......bsb.......",".....bsb........","....bsb.........","...bsb..........","..bsb...........",
+ ".lll............","l.l.l..........."]],
+ amphipod:[{b:"#f0e6dc",s:"#c8b8a8",a:"#e0d0c0",w:"#7ab0d8"},[
+ "wwwwwwwwwwwwwwww","w.a..........a.w","w..a........a..w","w...bbbbbbb....w","w..bbsbsbsbbb..w",
+ "w.bbsbsbsbsbbb.w","w..b.b.b.b.b.b.w","w.b.b.b.b.b.b..w","w..............w","wwwwwwwwwwwwwwww"]],
+ beetle:[{b:"#8a5a2a",s:"#c08a4a",l:"#5a3a1a",a:"#a07040"},[
+ "...a......a.....","....a....a......",".....bbbb.......","....bbbbbb......","...bsbbbbsb.....",
+ "..lbbbsbbbbl....","...bbbsbbbb.....","..lbbbsbbbbl....","...bbbsbbbb.....","..l.bbsbbb.l....","....bbbbb.......",".....bbb........"]],
+ yuhyeol:[{g:"#4a6a3a",d:"#2a3a20",r:"#d84a2a",y:"#e8c84a",e:"#ffe060",t:"#d03030"},[
+ "................","..........ggg...",".........gegrr..","........ggggrrt.","....dd..ggg..t..",
+ "...dggd..g......","..dgyggd.g......","..gg..gggg......","..gg....gg......","...gg..gg.......",
+ "....gggg........","................"]],
+ stalactite:[{r:"#8a7a6a",c:"#e8dcc8",s:"#c8b8a0",w:"#9ad0f0"},[
+ "rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr",".cccc..ccccc.cc.",".csc...cscc..c..",".cs....csc...c..",
+ "..s....csc......","..s.....sc......","..w.....s.......","........s.......","........w.......","................","........w......."]],
+ stalagmite:[{r:"#8a7a6a",c:"#e8dcc8",s:"#c8b8a0",w:"#9ad0f0"},[
+ "................","........w.......","................","........c.......",".......ccs......",
+ ".......cs.......","...c...ccs......","..ccs..ccss..c..","..ccs.cccss.ccs.",".cccssccccsscccs","rrrrrrrrrrrrrrrr"]],
+ flowstone:[{r:"#8a7a6a",c:"#f0e2c8",s:"#d8c098",d:"#b89870"},[
+ "rrrrrrrrrrrrrrrr","rrccccccccccccrr","rcccsscccssscccr","rccsscccssssccc.",".ccsscccsssscc..",
+ ".cssdccssdsscc..","..ssd.cssd.sc...","..sd..csd..s....","..d...sd...d....","......d........."]],
+ straw:[{r:"#8a7a6a",c:"#f4ecd8",h:"#b8a888",w:"#9ad0f0"},[
+ "rrrrrrrrrrrrrrrr",".c..c.c..c..c.c.",".c..c.c..c..c.c.",".c..c.c..c..c.c.",".h..c.h..c..h.c.",
+ ".w..c....h....h.","....h....w......","....w...........","................"]],
+ helictite:[{r:"#8a7a6a",c:"#f4ecd8",s:"#d8c8a8"},[
+ "rrrrrrrrrrrrrrrr","...c.......c....","...cc.....cs....","....cs...cs.....","...ccs..sc...c..",
+ "..cs.c..c...cs..","..c...cc....sc..","...cc..c...cs...","....s..cc.cs....",".......s..s....."]],
+ aragonite:[{r:"#8a7a6a",c:"#fffaf0",s:"#e0d8f0",y:"#d8c8a0"},[
+ "................","..c.....c.....c.","...c...c....c...","c...c.c...c.c...",".c..sss..c.c..c.",
+ "..cssyssc.sss.c.","...sssss.ssyssc.","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr"]],
+ rimstone:[{c:"#e8dcc8",s:"#c8b8a0",w:"#7ab8e0",l:"#b0d8f0"},[
+ "................","cccccc..........","cwwwlcc.........","sccccccccccc....","..scwwwwlllcc...",
+ "...scccccccccccc","......scwwwwwllc",".......sccccccss","................"]],
+ pearl:[{w:"#7ab8e0",l:"#a8d0f0",p:"#fff8ec",s:"#d8ccb8",r:"#8a7a6a"},[
+ "................","rrrrrrrrrrrrrrrr","rwwwwwwwwwwwwwwr","rwppwwwpswwppwwr","rwpswwppsswpsswr",
+ "rwwwpswpswwwwpwr","rwppsswwwppswpsr","rwpswwwwwpswwwwr","rrrrrrrrrrrrrrrr"]],
+ sump:[{r:"#5a4a3a",d:"#2a2224",w:"#2a5a8a",l:"#4a8ac0",h:"#9ad0f0"},[
+ "rrrrrrrrrrrrrrrr","rrdddddddddrrrrr","rdddddddddddrrrr","dddddddddddddrrr","hhlhlhhlhlhhlddr",
+ "wwwwwwwwwwwwwddr","wwlwwwwlwwwwwwdr","wwwwwlwwwwwlwwwr","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww"]],
+ bell:[{r:"#5a4a3a",a:"#c8e0f0",w:"#2a5a8a",l:"#4a8ac0",h:"#9ad0f0",b:"#ffffff"},[
+ "rrrrrrrrrrrrrrrr","rrraaaaaaaaarrrr","rraaaaaaaaaaarrr","rraaaabaaaaaaarr","hhhlhhhlhhhlhhhr",
+ "wwwwwbwwwwwwwwwr","wwlwwwwlwbwwwwwr","wwwwwlwwwwwlwwww","wwwwwwwwwwwwwwww"]],
+ skylight:[{r:"#6a5a4a",d:"#3a3030",s:"#9ad0f0",S:"#c8e8ff",g:"#4f9a3a",y:"#fff1b8"},[
+ "rrrrrgSSSSgrrrrr","rrrrgSSSSSSgrrrr","rrrrgSsSSsSgrrrr","rrrrrgSSSSgrrrrr","ddddddyyyydddddd",
+ "dddddyyyyyyddddd","ddddyyyyyyyydddd","dddyyyyyyyyyyddd","ddyyyyyyyyyyyydd","rrrrrrrrrrrrrrrr"]],
+ baduk:[{s:"#8a7a6a",l:"#5a4a3a",k:"#1a1a1a",w:"#f4f4f0",h:"#b0a090"},[
+ "hhhhhhhhhhhhhh..","hslslslslslslsl.","hllllllllllllll.","hslskslslwlslsl.","hllllllllllllll.",
+ "hslslwlskslslsl.","hllllllllllllll.","hslslslslslkwsl.","hllllllllllllll.","hslslslslslslsl.","hhhhhhhhhhhhhh.."]],
+ coral:[{r:"#8a7a6a",c:"#f4ecd8",s:"#d8c8a8"},[
+ "................","...c.c...c.c....","..ccscc.ccscc...","..cscsc.cscsc.c.",".ccsccsccsccscc.",
+ ".cscscscscscscs.","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr"]],
+ column:[{r:"#8a7a6a",c:"#e8dcc8",s:"#c8b8a0"},[
+ "rrrrrrrrrrrrrrrr","....cccccc......",".....ccccs......","......ccs.......","......ccs.......",
+ "......ccs.......","......ccs.......",".....cccss......","....ccccsss.....","rrrrrrrrrrrrrrrr"]],
+ curtain:[{r:"#8a7a6a",c:"#f0d8b8",s:"#d8a878",b:"#b87848"},[
+ "rrrrrrrrrrrrrrrr","rcscbcscbcscbcsr",".cscbcscbcscbcs.",".csc.cscbcsc.cs.","..sc.csc.csc..s.",
+ "..s...sc..sc....","........c.......","................"]],
+ lake:[{r:"#6a5a4a",w:"#2a6aa0",l:"#4a90c8",h:"#9ad0f0",c:"#e8dcc8"},[
+ "rrrrrrrrrrrrrrrr","..c.....c....c..","..c...........c.","................","hhlhhhlhhhhlhhhh",
+ "wwwwlwwwwwwlwwww","wlwwwwwwlwwwwwlw","wwwwwlwwwwwwwwww","wwwwwwwwwwwwwwww"]],
+ eggstal:[{r:"#8a7a6a",w:"#f8f4ec",s:"#d8ccb8",y:"#f2c230",o:"#e0a020"},[
+ "................","................","................","......wwww......","....wwwwwwww....",
+ "...wwwyyyywww...","..wwwyyoyyywww..","..wwwyyyyyywws..","...swwwwwwwss...","rrrrrrrrrrrrrrrr"]],
+ inscription:[{s:"#9a8a7a",d:"#4a3a2a",h:"#b8a898"},[
+ "hhhhhhhhhhhhhhh.","hssssssssssssss.","hsdds.dsd.sdds..","hsds.ddsd.dsd...","hssss.sssssss...",
+ "hsd.dsd.ddsd.s..","hsdds.d.dsds.ss.","hssssssssssssss.","hsds.ddsd.sdsds.","hssssssssssssss."]],
+ minetrack:[{r:"#5a4a3a",w:"#8a5a2a",m:"#7a7a8a",d:"#2a2224"},[
+ "rrrrrrrrrrrrrrrr","rwwwwwwwwwwwwwwr","rw.dddddddddd.wr","rw.dddddddddd.wr","rw.dddddddddd.wr",
+ "rw.mm......mm.wr","rw.wwwwwwwwww.wr","rw.mm......mm.wr","rwwwwwwwwwwwwwwr"]],
+ goldvein:[{r:"#7a6a5a",q:"#ece4d6",g:"#ffd84a",G:"#c8a020"},[
+ "rrrrrrrrrrrrrrrr","qqrrrrrrrrrrrrrr","rqqqrrrrgrrrrrrr","rrrqqqqrrrrrrrrr","rrrrrrqqgqrrrrrr",
+ "rrrrrrrrqqqqrrrr","rrGrrrrrrrrqqqrr","rrrrrrrrrrgrrqqq","rrrrrrrrrrrrrrrr"]],
+ /* 유물 */
+ carbide:[{b:"#c8a040",d:"#8a6a20",f:"#ffb030",y:"#fff0a0",k:"#3a3a44"},[
+ "......y.........",".....fyf........","......f.........","......k.........","....bbbbb.......",
+ "...bbddddbb.....","...bdbbbbdb.....","...bdbbbbdbk....","...bdbbbbdb.k...","...bbbbbbbb.k...","....bbbbbb..k...",".....dddd......."]],
+ lens:[{f:"#3a3a44",g:"#9ad0f0",l:"#c8e8ff",w:"#ffffff",k:"#1a1a1a"},[
+ "................","....ffffff......","...fggggggf.....","..fgllgkggf.....","..fglgkgggf.....",
+ "..fggkgwggf.....","..fgkggggff.....","...fggggfff.....","....ffffff......"]],
+ ribbon:[{r:"#d8302a",d:"#a01a18",k:"#6a5a4a"},[
+ "................","kkkkkkkkkkkkkkkk","kkkkkkrrkkkkkkkk","......rr........",".....rddr.......",
+ "....rd..dr......","...rd....dr.....","...r......r.....","..rd......dr....","..d........d...."]],
+ capcover:[{k:"#2a2a30",g:"#5a5a66",w:"#e8e8e8",s:"#9aa0aa"},[
+ "................","....kkkkkkk.....","...kgggggggk....","..kgsggggggsk...","..kggwwwwwggk...",
+ "..kgwkkkkwggk...","..kggwwwwwggk...","..kgsggggggsk...","...kgggggggk....","....kkkkkkk....."]],
+ lunchbox:[{b:"#c89a3a",d:"#8a6a20",h:"#f0d070",k:"#3a2a1a"},[
+ "................","....kkkkkk......","....k....k......","..bbbbbbbbbbbb..","..bhhhhhhhhhhb..",
+ "..bddddddddddb..","..bbbbbbbbbbbb..","..bbbbbbbbbbbb..","..bhhhhhhhhhhb..","..bddddddddddb..","..bbbbbbbbbbbb.."]],
+ glove:[{m:"#6a4a2a",o:"#e0c050",d:"#a08020"},[
+ "................","..o.o.o.........","..o.o.o.o.......","..o.o.o.o.......","..oooooooo......",
+ "..oooooooo.oo...","..ommooooooo....","..mmmmmooooo....","...mmmmmooo.....","...mmmmmm.......","....mmmm........"]],
+ notebook:[{c:"#3a5a8a",d:"#2a3a5a",p:"#f4ecd8",l:"#9ab0c8",k:"#1a1a1a"},[
+ "................","..ccccccccccc...","..cpppppppppc...","..cplllllllpc...","..cpppppppppc...",
+ "..cplllkllllc...","..cpppppppppc...","..cpllllllpkc...","..cpppppppppc...","..ccccccccccc...","..ddddddddddd..."]],
+ carabiner:[{s:"#8a8a90",r:"#a0582a",d:"#5a5a60"},[
+ "................","....ssssss......","...s......s.....","..s........s....","..s........r....",
+ "..s........r....","..s.......rr....","..s.......d.....","...s.....s......","....ssssss......"]],
+ mask:[{k:"#1a2a3a",g:"#9ad0f0",l:"#c8e8ff",w:"#ffffff",s:"#3a6a9a"},[
+ "................","kkkkkkkkkkkkkkkk","k..kkkkkkkkkk..k","..kggggkkggggk..","..kglggkkgwgggk.",
+ "..kgggwkkgggggk.","..kggggkkggwggk.","...kkkkkkkkkkk..","......kssk......","......kssk......"]],
+ badukstone:[{k:"#1a1a1a",g:"#4a4a4a",w:"#9a9a9a",s:"#6a5a4a"},[
+ "................","................","......kkkk......","....kkkkkkkk....","...kkgwwkkkkk...",
+ "...kkggkkkkkk...","...kkkkkkkkkk...","....kkkkkkkk....","......kkkk......","..ssssssssssss.."]],
+ wetglove:[{o:"#e06a2a",d:"#a8401a",w:"#9ad0f0",b:"#ffffff"},[
+ "......w.........","..o.o.o..w......","..o.o.o.o.......","..o.o.o.o..w....","..oooooooo......",
+ "..oooooooo.oo...","..oddooooooo....","..ddddoooooo.w..","...ddddooo......","...dddddd.......","....dddd..w....."]],
+ reel:[{k:"#3a3a44",r:"#a0582a",y:"#e8d090",o:"#c86a30"},[
+ "................","....kkkkkk......","...kryyyyrk.....","..kryyooyyrk....","..kryokkoyrk....",
+ "..kryokkoyrkkkk.","..kryyooyyrk....","...kryyyyrk.....","....kkkkkk......","........y.y.y..."]],
+ punch:[{p:"#e8dcc0",l:"#9a8a6a",k:"#3a3a3a",t:"#c8b898"},[
+ "................","..pppppppppp....",".ppkkpkpkkppp...",".pllllllllllp...",".ppkpkkpkpppp...",
+ ".pllllllllllp...",".ppkkpkkpkppt...",".plllllllltt....","..pppppppt......"]],
+};
+const PIX_CACHE={};
+function pixIcon(id){
+  if(PIX_CACHE[id]) return PIX_CACHE[id];
+  const d=PIXI[id]; if(!d) return null;
+  const [pal,rows]=d,cv=document.createElement("canvas"),c=mkCtx(cv,16,16);
+  const h=rows.length,oy=Math.max(0,Math.floor((16-h)/2));
+  rows.forEach((row,y)=>{for(let x=0;x<row.length&&x<16;x++){const ch=row[x];if(ch!=="."&&pal[ch])R(c,x,oy+y,1,1,pal[ch]);}});
+  outline(c,16,16,PX.ol);
+  return PIX_CACHE[id]=cv.toDataURL();
+}
+const rico=(id,fallback,cls="")=>{const u=pixIcon(id);return u?`<img class="ico ${cls}" src="${u}" alt="">`:ico(fallback,cls);};
 
 const drawerOpen={bag:false,book:false};
 function wireDrawer(box,id){
@@ -1431,8 +1577,8 @@ function drawBook(){
   const known=k=>S.rec.includes(k)||old.includes(k);
   box.innerHTML=`<button class="ttl tg" data-d="book" aria-expanded="${drawerOpen.book}">${ptxt("탐사 기록장",{size:12,shadow:"#fff4c4"})}<span>이번 ${S.rec.length} · 누적 ${new Set([...old,...S.rec]).size}/${keys.length}${S.meters?` · 측량 ${S.meters}m`:""}<em>${drawerOpen.book?"▲":"▼"}</em></span></button>
   <div class="recgrid">${keys.map(k=>{const r=REC[k],g=S.rec.includes(k),o=old.includes(k);
-    return `<button class="rslot ${g?'new':o?'old':'unk'} ${bookSel===k?'sel':''}" data-k="${k}" ${known(k)?'':'disabled'}>${known(k)?ico(r.cat):'<i>?</i>'}<span>${known(k)?r.n:"???"}</span></button>`}).join("")}</div>
-  <div class="tip ${bookSel&&known(bookSel)&&keys.includes(bookSel)?'':'muted'}">${bookSel&&known(bookSel)&&keys.includes(bookSel)?`${ico(REC[bookSel].cat,"big")}<div class="tx"><b>${REC[bookSel].n} <small>${REC[bookSel].cat}</small></b><span>${REC[bookSel].d}</span></div>`:"기록을 누르면 설명을 볼 수 있다. 흐린 칸은 지난 탐사에서 남긴 기록."}</div>`;
+    return `<button class="rslot ${g?'new':o?'old':'unk'} ${bookSel===k?'sel':''}" data-k="${k}" ${known(k)?'':'disabled'}>${known(k)?rico(k,r.cat):'<i>?</i>'}<span>${known(k)?r.n:"???"}</span></button>`}).join("")}</div>
+  <div class="tip ${bookSel&&known(bookSel)&&keys.includes(bookSel)?'':'muted'}">${bookSel&&known(bookSel)&&keys.includes(bookSel)?`${rico(bookSel,REC[bookSel].cat,"big")}<div class="tx"><b>${REC[bookSel].n} <small>${REC[bookSel].cat}</small></b><span>${REC[bookSel].d}</span></div>`:"기록을 누르면 설명을 볼 수 있다. 흐린 칸은 지난 탐사에서 남긴 기록."}</div>`;
   box.querySelectorAll(".rslot[data-k]:not([disabled])").forEach(b=>b.onclick=()=>{bookSel=b.dataset.k;drawBook();});
   wireDrawer(box,"book");
 }
@@ -2349,13 +2495,13 @@ function renderMe(){
     body=`<div class="dexhd"><b>${N}</b> / ${all.length}종 등록</div>
       <ul class="eff">${DEX_M.map(m=>`<li class="${N>=m.n?'on':''}">${m.n}종 · ${m.t}</li>`).join("")}</ul>
       <p class="shopnote">기록에는 시간이 든다(한 번에 10분). 생성물을 깨거나 박쥐 동면을 방해하면 그 탐사의 지원금이 30% 깎인다.</p>
-      <div class="recgrid">${all.map(k=>{const r=REC[k],g=have.has(k);return `<button class="rslot ${g?'new':'unk'}" data-k="${k}" ${g?'':'disabled'}>${g?ico(r.cat):'<i>?</i>'}<span>${g?r.n:"???"}</span></button>`;}).join("")}</div>
-      <div class="tip ${lkSel&&REC[lkSel]&&have.has(lkSel)?'':'muted'}">${lkSel&&REC[lkSel]&&have.has(lkSel)?`${ico(REC[lkSel].cat,"big")}<div class="tx"><b>${REC[lkSel].n} <small>${REC[lkSel].cat}</small></b><span>${REC[lkSel].d}</span><span class="meta">발견되는 곳: ${where(lkSel)||"-"}</span></div>`:"등록한 항목을 누르면 설명이 나온다."}</div>`;
+      <div class="recgrid">${all.map(k=>{const r=REC[k],g=have.has(k);return `<button class="rslot ${g?'new':'unk'}" data-k="${k}" ${g?'':'disabled'}>${g?rico(k,r.cat):'<i>?</i>'}<span>${g?r.n:"???"}</span></button>`;}).join("")}</div>
+      <div class="tip ${lkSel&&REC[lkSel]&&have.has(lkSel)?'':'muted'}">${lkSel&&REC[lkSel]&&have.has(lkSel)?`${rico(lkSel,REC[lkSel].cat,"big")}<div class="tx"><b>${REC[lkSel].n} <small>${REC[lkSel].cat}</small></b><span>${REC[lkSel].d}</span><span class="meta">발견되는 곳: ${where(lkSel)||"-"}</span></div>`:"등록한 항목을 누르면 설명이 나온다."}</div>`;
   } else if(meTab==="map"){
     body=svPage();
   } else {
     body=`<div class="dexhd"><b>${Object.keys(P.relics).length}</b> / ${RELICS.length}개 · 과거에 다녀간 탐사자의 흔적</div>
-      <div class="relics">${RELICS.map(x=>{const g=P.relics[x.id];const cv=x.cave==="gm"?"광명동굴":CAVES[x.cave].name;return `<div class="relic ${g?'on':''}"><b>${g?x.n:"???"}</b><small>${cv}</small><span>${g?x.d:"아직 찾지 못했다. 탐지 능력이 높을수록 잘 찾는다."}</span></div>`;}).join("")}</div>`;
+      <div class="relics">${RELICS.map(x=>{const g=P.relics[x.id];const cv=x.cave==="gm"?"광명동굴":CAVES[x.cave].name;return `<div class="relic ${g?'on':''}"><div class="rhd"><span class="rimg">${g?rico(x.id,"helmet","big"):"<i>?</i>"}</span><div><b>${g?x.n:"???"}</b><small>${cv}</small></div></div><span>${g?x.d:"아직 찾지 못했다. 탐지 능력이 높을수록 잘 찾는다."}</span></div>`;}).join("")}</div>`;
   }
   $("story").innerHTML=`<div class="frame me">${tabs}${body}</div>`;
   document.querySelectorAll(".me .stabs button").forEach(b=>b.onclick=()=>{meTab=b.dataset.t;lkMsg="";renderMe();});
