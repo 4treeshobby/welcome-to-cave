@@ -2674,6 +2674,12 @@ $("toTitle").onclick=()=>{if(S.phase==="cave"&&!confirmLeave())return;showTitle(
 $("nvMap").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;selCave=null;newRun();renderMap();window.scrollTo(0,0);};
 $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
+function masterFill(){
+  RELICS.forEach(x=>P.relics[x.id]=1);
+  PLAYABLE.forEach(id=>{const c=cp(id);c.recs=[...new Set([...(c.recs||[]),...CAVES[id].recs])];const o=svOf(id);Object.keys(CAVES[id].nodes).forEach(k=>o[k]=2);c.svDone=1;});
+  saveP();
+}
+if(MASTER) masterFill();
 newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 : 마스터";}
 </script>
 
