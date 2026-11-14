@@ -2313,7 +2313,7 @@ function runTitle(){
 const T_CALLS=["오~ 해야!","전방에 낙석!","로프 프리!","확보 완료!","하강 준비 끝!","헤드램프 점등!"];
 let tCallI=Math.floor(Math.random()*T_CALLS.length),tCallT=0;
 function tCall(){const el=$("tFoot");if(!el)return;el.textContent=T_CALLS[tCallI%T_CALLS.length];el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");tCallI++;}
-function showTitle(){tCall();clearInterval(tCallT);tCallT=setInterval(()=>{if($("title").hidden){clearInterval(tCallT);return;}tCall();},2600);$("title").hidden=false;$("game").hidden=true;document.body.classList.add("ontitle");runTitle();}
+function showTitle(){tCall();clearInterval(tCallT);tCallT=setInterval(()=>{if($("title").hidden){clearInterval(tCallT);return;}tCall();},5000);$("title").hidden=false;$("game").hidden=true;document.body.classList.add("ontitle");runTitle();}
 function confirmLeave(){toast("탐사 중에는 타이틀로 나갈 수 없다. 먼저 탈굴하자.");return false;}
 function startGame(){$("title").hidden=true;$("game").hidden=false;document.body.classList.remove("ontitle");newRun();renderMap();window.scrollTo(0,0);}
 
