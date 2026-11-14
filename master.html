@@ -5,13 +5,13 @@
 <meta name="robots" content="noindex">
 <script>window.__MASTER=1</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>웰컴 투 동굴</title>
+<title>웰컴 투 동굴 : 마스터</title>
 <meta name="description" content="한국의 진짜 석회동굴을 탐사하는 픽셀 탐험 게임. 헤드램프 하나 들고 막장까지, 그리고 오~해야!">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="웰컴 투 동굴">
-<meta property="og:title" content="웰컴 투 동굴">
+<meta property="og:title" content="웰컴 투 동굴 : 마스터">
 <meta property="og:description" content="한국의 진짜 석회동굴을 탐사하는 픽셀 탐험 게임">
-<meta property="og:url" content="https://welcome-to-cave.vercel.app/">
+<meta property="og:url" content="https://welcome-to-cave.vercel.app/master.html">
 <meta property="og:image" content="https://welcome-to-cave.vercel.app/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -2674,7 +2674,7 @@ $("toTitle").onclick=()=>{if(S.phase==="cave"&&!confirmLeave())return;showTitle(
 $("nvMap").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;selCave=null;newRun();renderMap();window.scrollTo(0,0);};
 $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
-newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 · 마스터";}
+newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 : 마스터";}
 </script>
 
 </body>

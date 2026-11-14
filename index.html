@@ -2672,7 +2672,7 @@ $("toTitle").onclick=()=>{if(S.phase==="cave"&&!confirmLeave())return;showTitle(
 $("nvMap").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;selCave=null;newRun();renderMap();window.scrollTo(0,0);};
 $("nvMe").onclick=()=>openMe();
 $("nvShop").onclick=()=>{if(S.phase==="cave"||S.phase==="event")return;openShop(S.phase==="prep"?"prep":"map");};
-newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 · 마스터";}
+newRun(); renderMap(); showTitle(); if(!MASTER) initCloud(); else {saveWhere="마스터 전용 저장";document.title="웰컴 투 동굴 : 마스터";}
 </script>
 
 </body>
