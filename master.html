@@ -2317,6 +2317,18 @@ const pct=(b,lat,lon)=>[(lon-b.lo0)/(b.lo1-b.lo0)*100,(b.la0-lat)/(b.la0-b.la1)*
 let mapView="kr",lastNarrow=null;
 const narrow=()=>window.matchMedia?matchMedia("(max-width:560px)").matches:false;
 window.addEventListener("resize",()=>{if(!$("title").hidden){clearTimeout(window.__tr);window.__tr=setTimeout(runTitle,200);}if(S&&S.phase==="map"&&narrow()!==lastNarrow)renderMap();});
+let PIN_CACHE=null;
+function pinPos(){if(PIN_CACHE)return PIN_CACHE;
+  const P2=CAVE_ORDER.map(id=>{const c=CAVES[id];const [x,y]=pct(ZB,c.lat,c.lon);return {id,x,y};});
+  const RX=11,RY=13;
+  for(let it=0;it<80;it++){let moved=0;
+    for(let i=0;i<P2.length;i++)for(let j=i+1;j<P2.length;j++){const a=P2[i],b=P2[j];let dx=b.x-a.x,dy=b.y-a.y;
+      if(!dx&&!dy){dx=.1;dy=.1;}
+      const d=Math.sqrt((dx/RX)**2+(dy/RY)**2);
+      if(d<1){const k=(1-d)/2/d;a.x-=dx*k;a.y-=dy*k;b.x+=dx*k;b.y+=dy*k;moved=1;}}
+    P2.forEach(q=>{q.x=Math.max(5,Math.min(95,q.x));q.y=Math.max(7,Math.min(93,q.y));});
+    if(!moved)break;}
+  PIN_CACHE={};P2.forEach(q=>PIN_CACHE[q.id]=[+q.x.toFixed(2),+q.y.toFixed(2)]);return PIN_CACHE;}
 function renderMap(){
   const nw=narrow(); lastNarrow=nw;
   S.phase="map";
@@ -2324,7 +2336,8 @@ function renderMap(){
   $("place").innerHTML=selCave?"답사지 소개":"탐사 지도";
   $("logSec").hidden=true;
   const sel=selCave&&CAVES[selCave]?CAVES[selCave]:null;
-  const marks=CAVE_ORDER.map((id,i)=>{const c=CAVES[id],st=caveState(id),[x,y]=pct(ZB,c.lat,c.lon);
+  const PP=pinPos();
+  const marks=CAVE_ORDER.map((id,i)=>{const c=CAVES[id],st=caveState(id),[x,y]=PP[id];
     return `<button class="mk ${st} ${selCave===id?'sel':''}" data-id="${id}" style="left:${x}%;top:${y}%" aria-label="${i+1}. ${c.name}"><span class="spr" data-st="${st}"></span><span class="no">${i+1}</span>${selCave===id?`<span class="tag">${ptxt(c.name,{size:10,shadow:""})}</span>`:""}</button>`;}).join("");
   const [zx,zy]=pct(MB,ZB.la0,ZB.lo0),[zx2,zy2]=pct(MB,ZB.la1,ZB.lo1);
   const evts=EVENTS.map(e=>{const [x,y]=pct(MB,e.lat,e.lon);return `<span class="ev" style="left:${x}%;top:${y}%"><b>?</b></span>`;}).join("");
