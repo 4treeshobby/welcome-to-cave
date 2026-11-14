@@ -513,6 +513,12 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 .svlist li span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .svlist li small{font-size:10px;flex:none}
 .svlist li.ok{color:var(--ink)}.svlist li.ok small{color:var(--moss)}.svlist li.err small{color:#c0503a}
+.stachip{margin-left:auto;align-self:center;font-size:12px;color:var(--dim);padding:0 4px;white-space:nowrap}
+.stachip b{font-family:var(--f-title);font-weight:400;font-size:15px;color:var(--moss)}.stachip.low b{color:var(--red)}
+.guk{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim);margin:6px 0 8px}
+.guk b{color:var(--navy)}
+.guk button{font:inherit;font-size:12px;border:0;background:var(--yellow);color:var(--navy);padding:3px 10px;box-shadow:0 0 0 2px var(--navy);cursor:pointer;white-space:nowrap}
+.guk button:disabled{background:#eef0f2;color:var(--dim);box-shadow:0 0 0 2px var(--line);cursor:default}
 .dexhd{font-size:13px;color:var(--dim);margin-bottom:8px}.dexhd b{font-family:var(--f-title);font-size:20px;color:var(--navy)}
 .relics{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .relic{background:#fff;padding:8px 10px;box-shadow:inset 0 0 0 2px var(--line);font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:2px}
@@ -586,7 +592,7 @@ body:not([data-phase="cave"]) .choices small{display:inline;margin:0 0 0 6px}
 <div class="wrap" id="game" hidden>
   <header>
     <nav class="tbar" id="tbar" aria-label="메뉴">
-      <button id="toTitle">타이틀</button><button id="nvMap">지도</button><button id="nvMe">내 정보</button><button id="nvShop">종모산악</button>
+      <button id="toTitle">타이틀</button><button id="nvMap">지도</button><button id="nvMe">내 정보</button><button id="nvShop">종모산악</button><span class="stachip" id="staChip"></span>
     </nav>
     <div class="hud" id="hud">
       <div class="meter m-bat" id="mBat"><div class="lbl"><span id="batLbl">헤드램프</span><b id="batV"></b></div><div class="track"><div class="fill" id="batF"></div></div></div>
@@ -645,11 +651,12 @@ const GEAR={
   blanket:{n:"은박 담요",slot:1,max:2,d:"몸을 감싸 체온 35 회복. 다른 사람에게 덮어 줄 수도 있다.",use:1},
   firstaid:{n:"구급 키트",slot:1,max:1,d:"부목, 압박붕대, 소독약. 부상자 처치용. 직접 쓰면 체력 10 회복.",use:1},
   gas:{n:"가스 측정기",slot:1,max:1,d:"이산화탄소·산소 농도를 잰다. 공기가 고인 구간을 미리 알려준다."},
+  dive:{n:"케이브 다이빙 장비",slot:4,max:1,d:"사이드마운트 실린더 두 개와 레귤레이터, 마스크·핀, 드라이슈트, 가이드 라인 릴. 사이펀을 잠수해 통과할 수 있다. 무겁고 비싸다."},
   survey:{n:"측량 키트",slot:1,max:1,d:"레이저 거리·경사·방위계와 방수 야장. 구간마다 스테이션을 박고 측량하면 내 정보의 측량도가 한 칸씩 그려진다. 모든 구간을 정밀 측량하면 측량도가 완성된다."},
   camera:{n:"접사 카메라",slot:1,max:1,d:"작은 생물을 확대 촬영해 종을 확인한다."},
 };
 const PRESET={};
-const PRICE={food:3000,battery:5000,blanket:4000,firstaid:12000,backup:15000,rope15:20000,rope:40000,rope45:60000,rope60:80000,suit:60000,inner:35000,outer:50000,survey:50000,camera:70000,gas:80000,srt:120000};
+const PRICE={food:3000,battery:5000,blanket:4000,firstaid:12000,backup:15000,rope15:20000,rope:40000,rope45:60000,rope60:80000,suit:60000,inner:35000,outer:50000,survey:50000,camera:70000,gas:80000,dive:300000,srt:120000};
 const LAMP_T=[{n:"기본 헤드램프",p:0},{n:"블랙다이아몬드 헤드램프",p:45000},{n:"페츨 헤드램프",p:90000}];
 const SRT_B=["보급형","클라이밍 테크놀로지","페츨"],SRT_BP=[0,25000,50000];
 const SRT_PARTS=[["harness","하네스"],["maillon","D링(마일론)"],["desc","하강기"],["croll","가슴 등강기"],["hand","핸드 어센더"],["foot","풋 루프"],["cows","카우스 테일"]];
@@ -660,6 +667,7 @@ const lampRad=()=>{const g=P.gear.lamp;return 1+g.t*.1+g.e*.02;};
 const srtQ=()=>SRT_PARTS.reduce((a,[k])=>a+P.gear.srt[k].t*2+P.gear.srt[k].e,0)/SRT_PARTS.length;
 const srtMul=()=>Math.max(.45,1-srtQ()*.06);
 const ROPE_LEN={rope15:15,rope:30,rope45:45,rope60:60};
+const ropeTot=()=>Object.keys(ROPE_LEN).reduce((a,k)=>a+(S.inv[k]||0)*ROPE_LEN[k],0);
 const ropeLen=()=>Object.keys(ROPE_LEN).reduce((m,k)=>has(k)?Math.max(m,ROPE_LEN[k]):m,0);
 const lenTag=k=>ROPE_LEN[k]?`<span class="rl">${ROPE_LEN[k]}m</span>`:"";
 const shortWon=n=>n>=10000?`${+(n/10000).toFixed(1)}만`:`${n/1000}천`;
@@ -684,6 +692,10 @@ const REC={
   rimstone:{n:"휴석소",cat:"지형",light:0,d:"계단식 논처럼 층층이 둑을 쌓고 물이 고인 웅덩이들. 둑 테두리는 밟으면 깨진다."},
   pearl:{n:"동굴진주",cat:"지형",light:2,d:"웅덩이 바닥에서 물방울에 굴려지며 둥글게 자란 방해석 알갱이. 하얗고 매끈하다."},
   sump:{n:"사이펀",cat:"지형",light:0,d:"천장까지 물에 잠긴 통로. 잠수 장비 없이는 더 나아갈 수 없다."},
+  bell:{n:"에어벨",cat:"지형",light:0,d:"사이펀 너머 천장 아래 갇힌 공기 주머니. 잠수한 탐사자가 물 밖으로 머리를 내밀고 숨을 돌리는 곳."},
+  skylight:{n:"천창",cat:"지형",light:0,d:"동굴 천장이 하늘로 뚫린 구멍. 햇빛과 빗물, 낙엽이 들어와 굴 안에 작은 박명대가 생긴다."},
+  baduk:{n:"바둑판 석판",cat:"역사",light:0,d:"높이 6m쯤 되는 석판에 그려진 바둑판. 옛날 신선들이 삼태산과 이 동굴을 오가며 바둑을 두고 놀던 곳이라 전한다."},
+  yuhyeol:{n:"유혈목이",cat:"생물",light:0,d:"목덜미가 붉은 뱀. 비 오는 날 동굴 입구 철책 근처로 몸을 피해 들어온다. 독니가 입 안쪽 깊이 있어 물리면 위험하다. 비 오는 날 일광굴에서만 만날 수 있다."},
   coral:{n:"동굴산호",cat:"지형",light:1,d:"벽면에 오돌토돌 핀 팝콘 모양의 생성물. 스며 나온 물이 증발하며 남긴 방해석."},
   column:{n:"석주",cat:"지형",light:1,d:"천장의 종유석과 바닥의 석순이 만나 이어진 기둥."},
   curtain:{n:"커튼",cat:"지형",light:2,d:"경사진 천장을 따라 흘러내린 얇은 막. 뒤에서 빛을 비추면 붉고 흰 줄무늬가 비친다."},
@@ -742,7 +754,7 @@ CAVES.gosu={lv:2,tip:"생성물이 빽빽해요. 가방은 앞으로 메세요!"
 CAVES.seong={lv:3,tip:"호수를 건너요. 젖어도 되는 옷은 필수!",name:"성류굴",region:"경북 울진",lat:36.95,lon:129.37,diff:"중급",need:70,start:"e",goal:"hall",
   intro:"왕피천 절벽에 자리한 동굴. 아주 오래전부터 사람들이 드나들며 벽에 글을 남겼다. 안쪽은 여러 개의 호수로 이어지고, 대부분 물에 잠겨 있다.",
   tips:["suit"],
-  recs:["gopdeung","inscription","lake","amphipod","column","stalagmite","sump"],
+  recs:["gopdeung","inscription","lake","amphipod","column","stalagmite","sump","bell"],
   nodes:{
     e:{p:"왕피천 입구",len:40,disc:["gopdeung"],t:()=>["강물 소리가 등 뒤로 멀어진다. 입구 근처 벽에 곱등이가 빽빽하다.","관람로 너머 물에 잠긴 구간이 오늘의 탐사 대상이다."],
       c:[{t:"안쪽 벽을 따라 들어간다",go:"wall"},{t:"탈굴한다",exit:1,cls:"back"}]},
@@ -751,7 +763,10 @@ CAVES.seong={lv:3,tip:"호수를 건너요. 젖어도 되는 옷은 필수!",nam
     lake1:{p:"첫 번째 호수",len:60,wet:2,disc:["lake","amphipod"],t:()=>["통로 전체가 물이다. 가슴까지 차오르는 차가운 호수를 건너야 한다.",has("suit")?"슈트가 몸을 감싸 준다. 그래도 차갑다.":"숨이 턱 막힐 만큼 차갑다. 이대로 오래 있으면 위험하다."],
       c:[{t:"호수를 건너 안쪽 대광장으로",go:"hall"},{t:"물길이 이어지는 왼쪽 구석으로",go:"sump"},{t:"글씨 벽으로 돌아간다",go:"wall",cls:"back"}]},
     sump:{p:"잠긴 통로",len:20,disc:["sump"],t:()=>["천장이 수면 아래로 잠긴다. 물속으로 통로가 계속 이어진다."],
-      c:[{t:"숨을 참고 잠수해 본다",end:"drown"},{t:"호수로 돌아간다",go:"lake1",cls:"back"}]},
+      c:[{t:"다이빙 장비를 갖추고 가이드 라인을 깔며 잠수한다",gear:1,if:()=>has("dive"),go:"bell",cost:{sta:12}},{t:"숨을 참고 잠수해 본다",if:()=>!has("dive"),end:"drown"},{t:"호수로 돌아간다",go:"lake1",cls:"back"}],
+      hint:()=>has("dive")?null:"물속으로 통로가 이어진다. 케이브 다이빙 장비가 있어야 지나갈 수 있다."},
+    bell:{p:"사이펀 너머 에어벨",len:30,disc:["bell"],t:()=>["20m를 잠수해 떠오르자 천장 아래 좁은 공기 주머니가 있다. 레귤레이터를 빼고 숨을 들이쉰다. 공기가 차고 축축하다.","헤드램프가 닿는 데까지 아무도 밟지 않은 흙바닥이 이어진다. 여기 발자국을 남기는 건 당신이 처음일지도 모른다."],
+      c:[{t:"가이드 라인을 따라 다시 잠수해 돌아간다",gear:1,go:"sump",cls:"back",cost:{sta:12}}]},
     hall:{p:"안쪽 대광장",len:70,disc:["column","stalagmite"],goal:1,t:()=>["물에서 올라서자 천장이 높은 광장이 펼쳐진다. 거대한 기둥들이 서 있다.","몸에서 물이 뚝뚝 떨어진다. 돌아갈 때 호수를 한 번 더 건너야 한다."],
       c:[{t:"호수를 건너 돌아간다",go:"lake1",cls:"back"}]},
   }};
@@ -780,7 +795,7 @@ CAVES.hwaam={lv:4,tip:"폐갱도 갱목에는 절대 기대지 마세요!",name:
   }};
 
 /* ---- 5. 백룡동굴 ---- */
-CAVES.baek={lv:5,tip:"진흙투성이가 돼요. 갈아입을 옷을 챙기세요!",name:"백룡동굴",region:"강원 평창",lat:37.33,lon:128.58,diff:"상급",need:150,start:"e",goal:"egg",
+CAVES.baek={lv:6,tip:"진흙투성이가 돼요. 갈아입을 옷을 챙기세요!",name:"백룡동굴",region:"강원 평창",lat:37.33,lon:128.58,diff:"상급",need:150,start:"e",goal:"egg",
   intro:"동강 절벽 중턱, 배를 타야만 닿는 동굴. 개발하지 않고 원형 그대로 두었다. 진흙과 좁은 구멍이 많고, 붉은박쥐가 산다는 기록이 있다.",
   tips:["camera","food"],
   recs:["redbat","gwanbat","millipede","eggstal","pearl","rimstone","straw"],
@@ -799,11 +814,63 @@ CAVES.baek={lv:5,tip:"진흙투성이가 돼요. 갈아입을 옷을 챙기세�
       c:[{t:"개구멍으로 돌아 나간다",go:"hole",cls:"back",cost:{sta:8}}]},
   }};
 
+/* ---- 일광굴 ---- */
+CAVES.ilgwang={lv:5,tip:"윗입구는 수직 70m! 로프 두 동을 이어 쓸 준비를 하세요!",name:"일광굴",region:"충북 단양 어상천면",lat:37.06,lon:128.29,diff:"상급",need:150,start:"slope",goal:"end",
+  intro:"삼태산 중턱의 길이 1km 석회동굴. 넓이 50m, 높이 30m 광장 천장에 구멍이 뚫려 햇빛이 쏟아진다. 높이 6m 석판에 바둑판이 그려져 있는데, 신선들이 삼태산과 이 동굴을 오가며 바둑을 두던 곳이라 한다. 아랫입구로 걸어 들어가거나 윗입구에서 70m를 수직 하강해 광장으로 내려간다.",
+  tips:["srt","rope60","rope15"],
+  recs:["gopdeung","yuhyeol","flowstone","stalactite","skylight","baduk","gwanbat","millipede","column","straw"],
+  nodes:{
+    slope:{p:"삼태산 중턱",len:20,disc:[],t:()=>[raining()?"빗방울이 낙엽을 두드린다. 비탈이 미끄럽다.":"낙엽 쌓인 비탈. 산새 소리가 들린다.","아래쪽 바위 틈엔 철책이 달린 아랫입구가, 능선 쪽 숲엔 땅이 꺼진 윗입구가 있다."],
+      c:[{t:"철책이 있는 아랫입구로",go:"lower"},{t:"능선의 윗입구로 올라간다",go:"upper",cost:{sta:6}},{t:"탈굴한다",exit:1,cls:"back"}]},
+    lower:{p:"아랫입구 철책",len:30,disc:["gopdeung"],
+      enter:()=>{if(raining()&&!S.f.snakeDone)S.f.snake=1;},
+      t:()=>S.f.snake?["철책을 넘으려 몸을 걸친 순간, 어깨에 차갑고 묵직한 것이 툭 얹힌다.","고개를 돌리자 바로 눈앞에 뱀 머리. 목덜미가 붉다. 유혈목이다. 비를 피해 철책에 올라와 있었던 모양이다."]
+        :["원래는 몸 하나 겨우 들어갈 틈이었다고 한다. 1937년 조종승 면장이 넓혀 지금은 드나들 만하다. 입구엔 철책 문이 달려 있다.",raining()?"철책이 빗물에 젖어 번들거린다. 안쪽에서 서늘한 바람이 나온다.":"입구 벽에 곱등이가 빽빽하다. 안쪽에서 서늘한 바람이 나온다."],
+      c:[{t:"숨을 멈추고 꼼짝하지 않는다",if:()=>S.f.snake,do:()=>{S.f.snake=0;S.f.snakeDone=1;S.min+=10;let x="한참을 굳어 있자 뱀이 스르르 철책을 타고 내려가 풀숲으로 사라졌다. 심장이 아직도 쿵쾅거린다.";if(!S.rec.includes("yuhyeol")){S.rec.push("yuhyeol");gainDet(2);x+=" 기록장에 적었다: 유혈목이";}return {t:x,rec:1};}},
+         {t:"소리를 지르며 확 털어낸다",if:()=>S.f.snake,do:()=>{S.f.snake=0;S.f.snakeDone=1;if(Math.random()<.5){S.sta-=15;if(has("firstaid")){take("firstaid");return {t:"털어내는 순간 손목을 물렸다! 구급상자로 상처를 짜내고 소독했다. 체력 −15.",bad:1};}S.f.venom=1;return {t:"털어내는 순간 손목을 물렸다! 구급상자가 없다. 손목이 부어오른다. 움직일 때마다 기운이 빠진다. 체력 −15.",bad:1};}return {t:"뱀이 철책 아래로 떨어져 달아났다. 휴, 물리진 않았다.",bad:1};}},
+         {t:"철책을 넘어 안쪽으로",if:()=>!S.f.snake,go:"ridge"},{t:"산 중턱으로 나간다",if:()=>!S.f.snake,go:"slope",cls:"back"}]},
+    ridge:{p:"돌고개",len:60,disc:["flowstone","stalactite"],t:()=>["입구에서 50~60m. 종유석과 유석이 흘러내려 굳으며 작은 고개를 이뤘다.",raining()?"빗물이 스며들어 유석 비탈이 비누처럼 미끄럽다.":"매끈한 유석 비탈이다. 잘못 디디면 미끄러진다."],
+      c:[{t:"홈을 찾아 하나씩 디디며 넘는다",go:"plaza",cost:{sta:6}},
+         {t:"빠르게 넘어간다",go:"plaza",do:()=>Math.random()<(raining()?.6:.35)?(S.sta-=12,{t:"유석 위에서 미끄러져 무릎을 찧었다. 체력 −12.",bad:1}):null},
+         {t:"입구로 돌아간다",go:"lower",cls:"back"}]},
+    plaza:{p:"일광 광장",len:50,disc:["skylight","baduk","gwanbat"],bats:1,t:()=>{const h=Math.floor((((S.min%1440)+1440)%1440)/60),a=["고개를 넘자 넓이 50m, 높이 30m의 광장이 열린다. 꼭대기에 뚫린 구멍으로 하늘이 보인다."];
+        if(raining()) a.push(S.wx==="storm"?"천창으로 빗물이 폭포처럼 쏟아져 광장 한가운데를 때린다. 물보라가 여기까지 튄다.":"천창에서 빗줄기가 가늘게 떨어진다. 바닥 한가운데가 젖어 반짝인다.");
+        else a.push(h>=11&&h<14?"한낮의 햇빛이 기둥처럼 쏟아져 광장 한가운데 꽂힌다. 먼지가 금가루처럼 떠다닌다.":h>=7&&h<17?"비스듬한 햇빛이 벽 한쪽을 훑는다. 해가 높이 뜨면 빛기둥이 바닥 한가운데 떨어진다고 한다.":"천창 너머 하늘이 어둡다. 햇빛이 들지 않는 시간이다.");
+        a.push("한쪽에 6m 높이의 석판이 서 있고, 바둑판이 그려져 있다. 돌 자국 몇 개가 판 위에 남아 있다. 두다 만 판 같다.");
+        if(S.f.rig70) a.push("천창에서 내려온 당신의 로프가 빛 속에 흔들린다.");
+        if(S.f.badukPut) a.push("빛이 가리킨 자리에 검은 바둑돌이 놓여 있다.");
+        return a;},
+      c:[{t:"광장 안쪽 탐사 구간으로",go:"inner"},
+         {t:"검은 바둑돌을 빛기둥이 가리키는 점에 놓는다",if:()=>P.relics.badukstone&&!S.f.badukPut&&!raining()&&(()=>{const h=Math.floor((((S.min%1440)+1440)%1440)/60);return h>=11&&h<14;})(),do:()=>{S.f.badukPut=1;S.min+=10;P.lore=P.lore||{};const first=!P.lore.baduk;P.lore.baduk=1;saveP();return {t:first?"돌을 놓자 딱, 하고 맑은 소리가 광장을 울린다. 석판 아래 어딘가에서 돌 구르는 소리가 길게 이어지다 멎었다. 신선들의 판이 한 수 나아갔다. 끝내지 못한 판이 이곳 하나뿐일까?":"돌을 놓자 그때처럼 맑은 소리가 울린다. 판은 여전히 다음 수를 기다린다.",rec:1};}},
+         {t:"로프를 타고 70m를 올라 윗입구로 나간다",gear:1,srt:1,if:()=>S.f.rig70&&has("srt"),go:"pitch",cls:"back",cost:{sta:16}},
+         {t:"돌고개를 넘어 입구 쪽으로",go:"ridge",cls:"back",cost:{sta:4}}]},
+    upper:{p:"윗입구",len:15,disc:[],t:()=>["숲속에 땅이 둥글게 꺼져 있다. 가장자리 이끼를 젖히자 아래로 까마득한 어둠이 뚫려 있다.","돌을 떨어뜨리니 한참 뒤에야 바닥에 닿는 소리가 난다. 수직 70m. 저 아래가 일광 광장이다.",raining()?"빗물이 구멍 가장자리로 모여 아래로 쏟아진다. 하강 중에 저 물줄기를 맞게 된다.":""].filter(Boolean),
+      c:[{t:"앵커를 박고 로프 두 동을 이어 하강한다",gear:1,srt:1,if:()=>has("srt")&&ropeTot()>=75,go:"pitch",cost:{sta:6},do:()=>{S.f.rig70=1;if(raining()&&Math.random()<(S.wx==="storm"?.7:.5)&&!S.f.stuckDone){S.f.stuck=1;}return null;}},
+         {t:"산 중턱으로 내려간다",go:"slope",cls:"back"}],
+      hint:()=>has("srt")&&ropeTot()>=75?null:"70m 수직굴이다. SRT 장비와, 앵커 여유까지 75m 이상의 로프가 필요하다. 60m와 15m처럼 두 동을 이어도 된다."},
+    pitch:{p:"70m 수직 하강",len:70,disc:[],norest:1,t:()=>S.f.stuck?["중간 매듭에서 하강기를 갈아 달다 손이 미끄러졌다. 줄 갈아타기에 실패해 매듭 위에 매달린 채 꼼짝할 수 없다.","천창으로 들이친 빗물이 폭포처럼 머리 위로 쏟아진다. 숨쉬기도 힘들다. 몸이 빠르게 식는다."]
+        :["로프에 매달려 천천히 내려간다. 머리 위 천창이 동전만큼 작아지고, 발아래 광장이 아득하다.",raining()?"빗물이 로프를 타고 흘러내려 손이 시리다.":"중간 매듭에서 하강기를 매듭 아래로 옮겨 단다. 손이 떨린다."],
+      c:[{t:"카우스 테일로 자기 확보부터 하고 차근차근 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{S.f.stuck=0;S.f.stuckDone=1;S.min+=90;S.tmp-=24;S.sta-=14;const g=!P.relics.wetglove&&!(S.relicDrops||[]).includes("wetglove");if(g){S.relicDrops=S.relicDrops||[];S.relicDrops.push("wetglove");}return {t:"쏟아지는 물을 맞으며 한 시간 반을 매달렸다. 카우스 테일을 걸고, 숨을 고르고, 하나씩 다시 걸었다. 마침내 하강기가 매듭 아래로 넘어갔다. 체온 −24 · 체력 −14."+(g?" 유물 발견! '그날의 젖은 장갑'. 무사히 탈굴해야 기록된다.":""),rec:1};}},
+         {t:"서둘러 다시 갈아탄다",if:()=>S.f.stuck,do:()=>{S.min+=30;if(Math.random()<.45){S.f.stuck=0;S.f.stuckDone=1;S.tmp-=10;S.sta-=10;return {t:"손이 떨렸지만 단번에 넘어갔다. 체온 −10 · 체력 −10.",rec:1};}S.tmp-=14;S.sta-=12;return {t:"또 미끄러졌다. 물은 계속 쏟아진다. 체온 −14 · 체력 −12.",bad:1};}},
+         {t:"광장 바닥까지 내려간다",gear:1,srt:1,if:()=>!S.f.stuck,go:"plaza",cost:{sta:8}},
+         {t:"상승기로 윗입구까지 올라간다",gear:1,srt:1,if:()=>!S.f.stuck,go:"upper",cls:"back",cost:{sta:22}}]},
+    inner:{p:"안쪽 탐사 구간",len:80,disc:["millipede","column","straw"],t:()=>["광장 뒤편으로 동굴이 이어진다. 빛이 닿지 않는 진짜 어둠이다.","기둥과 가는 빨대 종유석 사이를 지나면 길이 5m 벽 앞에서 끊긴다."],
+      c:[{t:"5m 벽으로",go:"wall"},{t:"일광 광장으로 돌아간다",go:"plaza",cls:"back"}]},
+    wall:{p:"5m 벽",len:5,disc:[],t:()=>["짧지만 미끈한 유석 벽. 위쪽으로 좁은 구멍이 보인다.",S.f.ilHand?"설치해 둔 핸드라인이 드리워져 있다.":"벽 위 바위 기둥에 줄을 걸 수 있을 것 같다."],
+      c:[{t:()=>S.f.ilHand?"핸드라인을 잡고 오른다":"로프로 핸드라인을 걸고 오른다",gear:1,if:()=>S.f.ilHand||ropeLen()>=15,go:"crawl",cost:{sta:6},do:()=>{S.f.ilHand=1;return null;}},
+         {t:"맨손으로 기어오른다",if:()=>!S.f.ilHand&&ropeLen()<15,go:"crawl",cost:{sta:16},do:()=>Math.random()<.35?{t:"두 번 미끄러져 팔꿈치가 까졌다.",bad:1}:null},
+         {t:"안쪽 탐사 구간으로 돌아간다",go:"inner",cls:"back"}]},
+    crawl:{p:"기어가는 구간",len:25,disc:[],enter:()=>{S.tmp-=4;},t:()=>["벽 위 구멍으로 들어가자 천장이 등에 닿는다. 배를 깔고 팔꿈치로 기어야 한다.","흙이 차갑다. 몸이 서서히 식는다."],
+      c:[{t:"끝까지 기어간다",go:"end",cost:{sta:8}},{t:"5m 벽으로 물러나 내려간다",go:"wall",cls:"back",cost:{sta:6}}]},
+    end:{p:"막다른 작은 방",len:30,disc:[],goal:1,t:()=>["기어 나오자 무릎 꿇고 앉을 만한 작은 방이 나온다. 벽이 사방에서 좁혀 들고, 바닥 틈으로 차가운 바람이 새어 든다.","더 나아갈 길은 없다. 이 아래 어딘가로 동굴이 계속 이어지는 것만 같다."],
+      c:[{t:"기어가는 구간으로 돌아 나간다",go:"crawl",cls:"back",cost:{sta:8}}]},
+  }};
+
 /* ---- 6. 환선굴 미답 구간 ---- */
 CAVES.hwan={lv:7,tip:"공기가 탁한 구간이 있어요. 가스 측정기를 챙기세요!",name:"환선굴 미답 구간",region:"강원 삼척",lat:37.37,lon:129.00,diff:"최상급",need:200,start:"entrance",goal:"lake",story:1,
   intro:"대이리 동굴지대의 거대한 석회동굴. 관람로 끝 너머 측량도에 없는 구간이 있다. 이틀 전 입굴한 다른 탐사팀 한 명이 아직 탈굴하지 못했다.",
   tips:["srt","rope","gas","firstaid","blanket"],
-  recs:["gopdeung","gwanbat","redbat","millipede","straw","rimstone","amphipod","pearl","sump","coral","column","curtain","beetle","lake"],
+  recs:["gopdeung","gwanbat","redbat","millipede","straw","rimstone","amphipod","pearl","sump","coral","column","curtain","beetle","lake","bell"],
   nodes:{
   entrance:{p:"관람로 끝",len:30,disc:["gopdeung"],t:()=>[
     "산 중턱 거대한 입구. 관람로 끝 철책을 넘으면 측량도가 없는 어둠이다.",
@@ -837,7 +904,10 @@ CAVES.hwan={lv:7,tip:"공기가 탁한 구간이 있어요. 가스 측정기를 
        {t:"둑을 밟고 곧장 건너간다",do:()=>{S.f.broke=1;return {t:"발밑에서 둑이 바삭 깨졌다. 수천 년이 한 걸음에 무너졌다.",bad:1};},go:"sump"},
        {t:"수로로 돌아간다",go:"stream",cls:"back"}]},
   sump:{p:"사이펀",len:20,disc:["sump"],t:()=>["회랑이 검은 물웅덩이로 끝난다. 천장이 수면 아래로 잠겨 있다.","물 건너편에서 아주 희미하게 공기가 흐르는 소리가 들리는 것도 같다."],
-    c:[{t:"숨을 참고 잠수해 본다",end:"drown"},{t:"휴석소 회랑으로 돌아간다",go:"rim",cls:"back"}]},
+    c:[{t:"다이빙 장비를 갖추고 사이펀을 잠수해 통과한다",gear:1,if:()=>has("dive"),go:"airbell",cost:{sta:12}},{t:"숨을 참고 잠수해 본다",if:()=>!has("dive"),end:"drown"},{t:"휴석소 회랑으로 돌아간다",go:"rim",cls:"back"}],
+    hint:()=>has("dive")?null:"물 건너편에 공간이 있는 것 같다. 케이브 다이빙 장비가 있어야 갈 수 있다."},
+  airbell:{p:"사이펀 너머 공기 방",len:35,disc:["bell"],t:()=>["물 위로 떠오르자 무릎 높이의 공기 방이 나온다. 아까 들리던 공기 소리가 여기서 났다.","벽 틈으로 바람이 새어 든다. 이 너머에도 동굴이 있다."],
+    c:[{t:"다시 잠수해 휴석소 회랑 쪽으로 돌아간다",gear:1,go:"sump",cls:"back",cost:{sta:12}}]},
   pitch:{p:"수직굴 상단",len:15,disc:[],t:()=>[
     "바닥이 갑자기 끊기고 15m 아래로 수직 구멍이 열린다. 아래에서 축축한 바람이 올라온다.",
     S.f.rigged?"앵커에 걸어 둔 로프가 그대로 드리워져 있다.":"벽에 기존 앵커 볼트 두 개가 박혀 있다. 녹이 슬었는지 확인해야 한다."],
@@ -900,7 +970,7 @@ CAVES.hwan={lv:7,tip:"공기가 탁한 구간이 있어요. 가스 측정기를 
   coral:{p:"동굴산호 회랑",len:60,disc:["coral"],t:()=>["벽면 가득 하얀 알갱이가 오돌토돌 피어 있다. 손을 대면 부서질 것 같다.","회랑 끝에서 넓은 공간의 울림이 들린다."],
     c:[{t:"회랑 끝 넓은 공간으로",go:"lake"},{t:"붕락 공간으로 돌아간다",go:"dyroom",cls:"back"}]},
   }};
-const ESCORT_BLOCK=["coral","lake","pitch","stream","rim","sump","lower","co2"];
+const ESCORT_BLOCK=["coral","lake","pitch","stream","rim","sump","lower","co2","airbell"];
 
 /* ---- 소개만 있는 동굴 (탐사 콘텐츠 준비 중) ---- */
 const lvTag=c=>`Lv.${c.lv}`;
@@ -922,8 +992,10 @@ CAVES.gudeong=SOON({lv:9,tip:"할아버지 귀신이 나온다는 소문이 있�
   intro:"깊이 163m, 국내에서 두 번째로 깊은 수직동굴.",tips:["srt","rope","gas"]});
 CAVES.yumun=SOON({lv:10,tip:"수직 구간이 5개예요. 피치마다 로프를 따로 준비하세요!",name:"유문동 수직동굴",region:"강원 정선",lat:37.42,lon:128.72,diff:"최정상 1위",type:"석회동굴 · 수직",status:"미개방",depth:"약 184m 이상",
   intro:"국내에서 가장 깊은 동굴. 36m, 57m, 5m, 48m, 38m 다섯 개의 수직 구간이 이어진다. 근처에 수직동굴이 하나 더 있어 '1'이 붙었다.",tips:["srt","rope","gas","food"]});
-const THUMB={gossi:"stream",gosu:"deco",seong:"lake",hwaam:"vein",baek:"boat",hwan:"lake",nodong:"crawl",okgye:"coral",myeongma:"crawl",seodae:"deco",woldun:"shaft",gwaneum:"falls",gudeong:"ghost",yumun:"shaft"};
-const CAVE_ORDER=["gossi","gosu","seong","hwaam","baek","hwan","nodong","okgye","myeongma","seodae","woldun","gwaneum","gudeong","yumun"];
+CAVES.samok=SOON({lv:4,tip:"자료 준비 중이에요!",name:"삼옥굴",region:"강원 영월 삼옥리",lat:37.21,lon:128.50,diff:"준비 중",type:"석회동굴",status:"자료 준비 중",
+  intro:"동강 변 삼옥리의 동굴. 자세한 내용은 곧 추가된다.",tips:[]});
+const THUMB={ilgwang:"skylight",gossi:"stream",gosu:"deco",seong:"lake",hwaam:"vein",baek:"boat",hwan:"lake",nodong:"crawl",okgye:"coral",myeongma:"crawl",seodae:"deco",woldun:"shaft",gwaneum:"falls",gudeong:"ghost",yumun:"shaft",samok:"crawl"};
+const CAVE_ORDER=["gossi","gosu","seong","hwaam","ilgwang","baek","hwan","nodong","okgye","myeongma","seodae","woldun","gwaneum","gudeong","yumun","samok"];
 
 /* ---- 국내 동굴 DB (지도에는 올리지 않음 · 출처: 나무위키 '동굴/대한민국') ---- */
 const CAVE_DB=[
@@ -933,6 +1005,7 @@ const CAVE_DB=[
   {n:"천동동굴",r:"충북 단양",t:"석회"},{n:"에덴동굴",r:"충북 단양",t:"석회"},{n:"구낭굴",r:"충북 단양",t:"석회"},{n:"금굴",r:"충북 단양",t:"석회"},
   {n:"영천동굴",r:"충북 단양",t:"석회",note:"국내 최장 수중동굴"},
   {n:"고씨굴",r:"강원 영월",t:"석회"},
+  {n:"일광굴",r:"충북 단양 어상천면",t:"석회",note:"약 1km, 천창 광장(넓이 50m·높이 30m), 바둑판 석판, 1937년 입구 확장, 낙석 위험으로 출입 통제"},
   {n:"구덩산 수직동굴",r:"강원 영월",t:"석회·수직",note:"깊이 163m, 국내 2위"},
   {n:"괴동굴",r:"강원 영월",t:"석회",note:"국내 유일 부정(뜬 방해석 결정) 발견, 미개방"},
   {n:"능암덕산굴",r:"강원 영월",t:"석회·수직",note:"1978년 발견, 수직 깊이 95.9m로 정정"},
@@ -1024,6 +1097,13 @@ const xp=()=>Object.keys(P.caves).reduce((a,id)=>a+P.caves[id].recs.length*10+(P
 const LV_XP=[0,20,50,90,140,200,270,350,440,540];
 const plvOf=x=>{let l=1;LV_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
 const plv=()=>plvOf(xp());
+const STA_MIN=30;
+const staIv=()=>(90-(plv()-1)*10/3)*1000;
+function staNow(){const t=Date.now();if(P.sta==null){P.sta=100;P.staT=t;}P.sta=Math.min(100,P.sta+Math.max(0,t-(P.staT||t))/staIv());P.staT=t;return P.sta;}
+const staMin=v=>Math.max(0,Math.ceil((v-staNow())*staIv()/60000));
+const staTxt=()=>Math.floor(staNow())>=100?"가득 참":`${staMin(100)}분 뒤 가득`;
+function staChip(){const el=$("staChip");if(!el)return;const v=Math.floor(staNow());el.classList.toggle("low",v<STA_MIN);el.innerHTML=`체력 <b>${v}</b>`;el.title=staTxt();}
+setInterval(()=>{try{if(S&&S.phase!=="cave")staChip();}catch(e){}},30000);
 const DET_XP=[0,10,25,45,70,100,140,190,250,320];
 const dlvOf=x=>{let l=1;DET_XP.forEach((t,i)=>{if(x>=t)l=i+1;});return l;};
 const dlv=()=>dlvOf(P.detxp||0);
@@ -1043,7 +1123,7 @@ const detMul=()=>dexHas(6)?1.5:1;
 const capOf=l=>11+Math.floor((l-1)/2)+(dexHas(10)?1:0);
 const cap=()=>capOf(plv());
 function gainDet(n){const b=dlv();P.detxp=(P.detxp||0)+Math.round(n*detMul());return dlv()>b;}
-const PLAYABLE=["gossi","gosu","seong","hwaam","baek","hwan"];
+const PLAYABLE=["gossi","gosu","seong","hwaam","ilgwang","baek","hwan"];
 const hasPermit=id=>id==="gossi"||!!(P.permits&&P.permits[id]);
 const unlocked=id=>plv()>=CAVES[id].lv&&hasPermit(id);
 const nextPermit=()=>PLAYABLE.find(id=>!hasPermit(id)&&!(S.drops||[]).includes(id));
@@ -1066,6 +1146,9 @@ const RELICS=[
   {id:"notebook",n:"선배 탐사대의 측량 수첩",cave:"hwan",node:"lake",d:"1990년대 날짜가 적힌 측량 수첩. 마지막 장에 '호수 건너편 미측량'이라고 쓰여 있다."},
   {id:"carabiner",n:"녹슨 스틸 카라비너",cave:"hwan",node:"coral",d:"지금은 쓰지 않는 무거운 강철 카라비너. 잠금 고리가 녹슬어 움직이지 않는다."},
   {id:"mask",n:"금 간 잠수 마스크",cave:"hwan",node:"sump",d:"사이펀 앞에 놓인 마스크. 누군가 이 물 너머를 꿈꿨다."},
+  {id:"badukstone",n:"검은 바둑돌 한 알",cave:"ilgwang",node:"plaza",d:"바둑판 석판 아래 흙 속에서 나온 매끈한 검은 돌. 한낮, 빛기둥이 판 위를 비출 때 이걸 들고 광장에 서 보자."},
+  {id:"wetglove",n:"그날의 젖은 장갑",cave:"ilgwang",node:"none",d:"폭우 속 70m 하강, 줄 갈아타기에 실패해 한 시간 반을 매달려 있던 날 끼고 있던 장갑. 결국 잘 내려왔다."},
+  {id:"reel",n:"녹슨 다이빙 릴",cave:"seong",node:"bell",d:"에어벨 바위에 묶인 채 끊어진 가이드 라인. 오래전 누군가 이 사이펀을 먼저 넘었다."},
   {id:"punch",n:"광부 출근부 조각",cave:"gm",node:"any",d:"광명동굴 탐지 훈련에서 모든 흔적을 찾아낸 사람만 발견한다. 1960년대 광부들의 이름이 적혀 있다."},
 ];
 const relicAt=(cv,node)=>RELICS.find(x=>x.cave===cv&&x.node===node&&!P.relics[x.id]&&!(S.relicDrops||[]).includes(x.id));
@@ -1131,7 +1214,11 @@ function moveTo(id,ch){
   S.min+=25+Math.round((cost.sta||0)*2)+(dy().escort?10:0)+(sc.wet?10:0);
   S.tmp-=has("inner")?1:2;
   if(ch&&ch.cls==="back"&&svDone(S.cave)){S.sta+=2;S.min-=10;}
-  if(sc.wet){let loss=has("suit")?6*sc.wet:28*sc.wet/ (sc.wet>1?1.4:1);if(has("inner"))loss*=.75;if(has("outer"))loss*=.8;loss=Math.round(loss);S.tmp-=loss;if(!has("suit"))pushMsg({t:`차가운 물에 몸이 젖었다. 체온 ${loss} 감소.${has("inner")||has("outer")?" 동굴복이 조금 막아 준다.":""}`,bad:1});}
+  const fx=wxFx(),mul=S.wx==="storm"?2:1,wv=(sc.wet||0)+(fx&&fx.wet&&fx.wet[id]?fx.wet[id]*mul:0);
+  if(fx&&fx.sta&&fx.sta[id]) S.sta-=fx.sta[id]*mul;
+  if(fx&&fx.tmp&&fx.tmp[id]) S.tmp-=fx.tmp[id]*mul;
+  if(S.f.venom){S.sta-=2;}
+  if(wv){let loss=has("suit")?6*wv:28*wv/ (wv>1?1.4:1);if(has("inner"))loss*=.75;if(has("outer"))loss*=.8;loss=Math.round(loss);S.tmp-=loss;if(!has("suit"))pushMsg({t:`차가운 물에 몸이 젖었다. 체온 ${loss} 감소.${has("inner")||has("outer")?" 동굴복이 조금 막아 준다.":""}`,bad:1});}
   else if(SCN()[S.cur]?.wet&&!has("suit")) S.tmp-=(has("inner")||has("outer"))?3:6;
   lightStep();
   const d=dy();
@@ -1164,6 +1251,19 @@ function pick(ch){
   const e=deathCheck(); if(e) return end(e);
   render();
 }
+/* ---- 날씨 ---- */
+const WX={sun:{n:"맑음"},cloud:{n:"흐림"},rain:{n:"비"},storm:{n:"폭우"}};
+function wxOf(id){const d=new Date();const r=rng(`wx:${id}:${d.getFullYear()}-${d.getMonth()}-${d.getDate()}:${Math.floor(d.getHours()/3)}`)();return r<.5?"sun":r<.72?"cloud":r<.93?"rain":"storm";}
+const raining=()=>S.wx==="rain"||S.wx==="storm";
+const WX_FX={
+  gossi:{wet:{water:1,pool:1},note:"비로 남한강 물이 불었다. 수로가 더 깊고 차갑다."},
+  seong:{wet:{lake1:1},note:"왕피천이 불어 호수 수위가 올랐다. 건너는 길이 더 차갑다."},
+  hwaam:{tmp:{tunnel:3,natural:3},note:"빗물이 갱도 천장에서 줄줄 떨어진다. 몸이 쉽게 젖는다."},
+  baek:{sta:{mud:4,hole:4},note:"빗물에 진흙이 더 질척해졌다. 걸음마다 힘이 더 든다."},
+  hwan:{wet:{stream:1,rim:1},note:"수로 물이 불었다. 물살이 세다."},
+  ilgwang:{wet:{plaza:1},note:"천창으로 빗물이 들이친다. 아랫입구 철책 주변엔 비를 피한 것들이 모여 있을지도."},
+};
+const wxFx=()=>raining()?WX_FX[S.cave]:null;
 /* ---- 측량 ---- */
 const svOf=id=>cp(id).sv||(cp(id).sv={});
 const svQ=n=>Math.max(svOf(S.cave)[n]||0,S.sv[n]||0);
@@ -1188,7 +1288,21 @@ function survey(){
   warn(); const e=deathCheck(); if(e) return end(e);
   render();
 }
-function record(id){msg=[];S.rec.push(id);S.min+=10;gainDet(1);pushMsg({t:`탐사 기록장에 적었다: ${REC[id].n} · 관찰과 기록에 10분`,rec:1});render();}
+const OBS_FAIL={
+  gopdeung:{p:.25,sta:8,t:"곱등이 떼가 팝콘처럼 사방으로 튀었다! 얼굴과 목덜미에 부딪혀 기겁하다 엉덩방아를 찧었다."},
+  gwanbat:{p:.2,sta:10,bat:1,t:"자던 박쥐들이 놀라 깨어 우르르 쏟아져 나왔다! 날개와 발톱에 얼굴이 긁혔다."},
+  redbat:{p:.2,sta:10,bat:1,t:"붉은박쥐가 깨어 날아오르자 주변 박쥐까지 한꺼번에 쏟아졌다. 볼에 긁힌 상처가 났다."},
+  millipede:{p:.15,sta:5,t:"노래기가 몸을 말며 고약한 액을 뿜었다. 손이 화끈거리고 눈이 따갑다."},
+  amphipod:{p:.15,tmp:6,t:"동굴옆새우를 보려다 물을 휘저어 흙탕물이 됐다. 놓치고 손만 꽁꽁 얼었다."},
+  beetle:{p:.15,sta:4,t:"딱정벌레가 소매 속으로 기어들어 와 한참을 버둥거렸다."},
+};
+const obsP=id=>{const F=OBS_FAIL[id];if(!F)return 0;let p=F.p*Math.max(.3,1-dlv()*.07);if(F.bat)p+=lampMode()===2?.15:lampMode()===0?-.08:0;return Math.max(.03,p);};
+function record(id){msg=[];S.min+=10;
+  const F=OBS_FAIL[id];
+  if(F&&Math.random()<obsP(id)){S.sta=clamp(S.sta-(F.sta||0));S.tmp=clamp(S.tmp-(F.tmp||0));if(F.bat)S.f.disturbed=1;
+    pushMsg({t:`${F.t} 관찰 실패.${F.sta?` 체력 −${F.sta}.`:""}${F.tmp?` 체온 −${F.tmp}.`:""}${F.bat?" 동면을 방해했다. 이번 지원금이 깎인다.":" 조심해서 다시 해 보자."}`,bad:1});
+    warn();const e=deathCheck();if(e)return end(e);render();return;}
+  S.rec.push(id);gainDet(1);pushMsg({t:`탐사 기록장에 적었다: ${REC[id].n} · 관찰과 기록에 10분`,rec:1});render();}
 function useItem(k){
   msg=[];
   if(k==="battery"){take(k);S.bat=100;S.usingBk=0;pushMsg("헤드램프 배터리를 새것으로 갈았다. 100%.");}
@@ -1233,6 +1347,7 @@ function hud(){
   $("tbar").hidden=S.phase==="cave"||S.phase==="event";
   document.querySelectorAll("#tbar button").forEach(b=>b.classList.toggle("on",(b.id==="nvMap"&&S.phase==="map")||(b.id==="nvMe"&&S.phase==="me")||(b.id==="nvShop"&&S.phase==="shop")));
   $("place").hidden=!["cave","event","prep"].includes(S.phase);
+  staChip();
   if(!inCave){document.documentElement.style.setProperty("--light","1");return;}
   meter("bat",light()); meter("sta",S.sta); meter("tmp",S.tmp);
   $("batLbl").textContent=S.usingBk?"보조 조명":"헤드램프";
@@ -1265,6 +1380,7 @@ function icon(k){
     case "blanket":R(c,2,3,12,10,"#c8ccd6");R(c,2,3,12,1,"#ffffff");R(c,3,5,4,4,"#e6e8ee");R(c,9,8,4,4,"#e6c84a");R(c,2,12,12,1,"#9aa0aa");break;
     case "firstaid":R(c,2,4,12,10,"#ffffff");R(c,2,4,12,1,"#e0e0e0");R(c,2,13,12,1,"#b0b0b0");R(c,7,6,2,6,"#d0302a");R(c,5,8,6,2,"#d0302a");R(c,6,2,4,2,"#9a9a9a");break;
     case "gas":R(c,4,2,8,12,"#f0b020");R(c,5,3,6,4,"#2a3a2a");R(c,6,4,4,2,"#7ad07a");R(c,5,9,2,2,"#3a3a44");R(c,9,9,2,2,"#d0302a");R(c,5,12,6,1,"#c08a10");R(c,7,0,2,2,"#5a5a66");break;
+    case "dive":R(c,4,2,3,11,"#d9472b");R(c,9,2,3,11,"#d9472b");R(c,4,2,1,11,"#ff8a6a");R(c,9,2,1,11,"#ff8a6a");R(c,4,1,3,1,"#9aa0a8");R(c,9,1,3,1,"#9aa0a8");R(c,5,0,1,1,"#2a2a34");R(c,10,0,1,1,"#2a2a34");R(c,7,5,2,2,"#2a2a34");R(c,6,6,1,4,"#2a2a34");R(c,3,13,10,2,"#2a5a8a");break;
     case "survey":R(c,3,4,10,8,"#e06a2a");R(c,4,5,6,4,"#2a2a34");R(c,5,6,4,2,"#9ad0f0");R(c,11,6,1,2,"#d0302a");R(c,13,7,2,1,"#ff4040");R(c,4,10,2,1,"#2a2a34");R(c,7,10,2,1,"#2a2a34");break;
     case "camera":R(c,2,5,12,8,"#3a3a44");R(c,4,4,3,1,"#3a3a44");R(c,6,7,5,5,"#9aa0aa");R(c,7,8,3,3,"#2a5a9a");R(c,8,8,1,1,"#ffffff");R(c,11,6,2,1,"#f0e070");break;
     case "p_harness":R(c,3,3,10,3,"#e06a2a");R(c,3,6,3,7,"#e06a2a");R(c,10,6,3,7,"#e06a2a");R(c,6,6,4,2,"#2b2f3a");R(c,7,8,2,3,"#c8d0d8");R(c,4,4,8,1,"#f08a4a");break;
@@ -1447,10 +1563,11 @@ function water(c,x,y,w,h,r,anim){
 const ART={
   gossi:{e:"mouth",hall:"hall",water:"stream",crawl:"crawl",pool:"rim"},
   gosu:{e:"hall",bats:"bats",deco:"deco",cliff:"cliff",flower:"coral"},
-  seong:{e:"mouth",wall:"wall",lake1:"stream",sump:"sump",hall:"hall"},
+  seong:{e:"mouth",wall:"wall",lake1:"stream",sump:"sump",bell:"lake",hall:"hall"},
   hwaam:{e:"mine",tunnel:"mine",shaft:"shaft",natural:"vein"},
   baek:{e:"boat",mud:"mud",bats:"bats",hole:"crawl",egg:"egg"},
-  hwan:{entrance:"mouth",bats:"bats",hall:"breakdown",stream:"stream",rim:"rim",sump:"sump",pitch:"shaft",lower:"mud",co2:"crawl",lake:"lake",squeeze:"crawl",dyroom:"doyun",coral:"coral"},
+  ilgwang:{slope:"mouth",lower:"mouth",ridge:"deco",plaza:"skylight",upper:"mouth",pitch:"shaft",inner:"hall",wall:"cliff",crawl:"crawl",end:"rim"},
+  hwan:{entrance:"mouth",bats:"bats",hall:"breakdown",stream:"stream",rim:"rim",sump:"sump",airbell:"lake",pitch:"shaft",lower:"mud",co2:"crawl",lake:"lake",squeeze:"crawl",dyroom:"doyun",coral:"coral"},
 };
 let ANIM=null;
 function drawScene(cv,type,seed,opt={}){
@@ -1482,6 +1599,22 @@ function drawScene(cv,type,seed,opt={}){
       if(type==="vein"){for(let i=0;i<3;i++){let x=10+i*80,y=20+i*8;for(let k=0;k<70;k++){R(c,x+k,y+Math.round(Math.sin(k/6)*3),1,2,"#e9e4d6");if(k%7===0)R(c,x+k,y+Math.round(Math.sin(k/6)*3),1,1,"#ffd84a");}}
         for(let y=10;y<FL;y++)R(c,4,y,3,1,PX.wood);R(c,0,10,14,2,PX.wood2);}
       break;}
+    case "skylight":{
+      tites(12,CS,8,0,110);tites(10,CS,8,195);
+      const hx=150,hw=15;
+      for(let x=hx-hw;x<=hx+hw;x++){const d=Math.abs(x-hx)/hw,top=Math.round(ceil[x]*(.15+.85*d*d));
+        for(let y=0;y<=ceil[x]+1;y++){if(y<top)continue;R(c,x,y,1,1,dith(x,y,y/(ceil[x]+2))?PX.sky:PX.sky2);}}
+      for(let y=0;y<ceil[hx-hw]+3;y++){R(c,hx-hw-1,y,1,1,y%3?PX.grass2:PX.grass);R(c,hx+hw+1,y,1,1,y%4?PX.grass:PX.grass2);}
+      for(let k=0;k<5;k++){const x=hx-hw+3+Math.floor(r()*hw*2-6);for(let y=ceil[x];y<ceil[x]+4+Math.floor(r()*6);y++)R(c,x,y,1,1,PX.grass2);}
+      const c0=ceil[hx]+1;
+      for(let y=c0;y<FL;y++){const w=hw*.7+(y-c0)*.45;for(let x=Math.round(hx-w);x<=hx+w;x++){const t=.32*(1-Math.abs(x-hx)/w);if(dith(x,y,t))R(c,x,y,1,1,"#fff1b8");}}
+      for(let x=hx-30;x<=hx+30;x++){const t=.5*(1-Math.abs(x-hx)/30);for(let y=fl[x]-1;y<=fl[x];y++)if(dith(x,y,t))R(c,x,y,1,1,"#fff1b8");}
+      const bx=196,bt=FL-26;R(c,bx,bt,24,26,PX.rock3);R(c,bx+1,bt,22,1,PX.rock5);R(c,bx+23,bt,1,26,PX.rock1);
+      for(let i=0;i<7;i++){R(c,bx+3,bt+3+i*3,18,1,PX.rock1);R(c,bx+3+i*3,bt+3,1,18,PX.rock1);}
+      [[bx+6,bt+6],[bx+12,bt+9],[bx+9,bt+15],[bx+15,bt+12]].forEach(([x,y],i)=>{R(c,x,y,2,2,i%2?"#f4f4f0":"#1a1a1a");});
+      for(let i=0;i<14;i++)anim.dust.push({x:hx-20+r()*40,y:c0+r()*(FL-c0-6),v:.15+r()*.25});
+      lights.push({x:hx,y:c0+4,r:46},{x:hx,y:FL-8,r:52});
+      pl.x=100;break;}
     case "breakdown":{
       tites(14,LS,6);
       for(let i=0;i<9;i++){const w=14+Math.floor(r()*24),h=10+Math.floor(r()*18),x=100+Math.floor(r()*130),y=FL-h+2;
@@ -2163,6 +2296,7 @@ function renderMe(){
       <div class="pstats">
         <div class="prow"><span>탐사자</span><b>Lv.${l}</b>${bar(x,LV_XP[l-1],LV_XP[l])}<small>경력 ${x}${LV_XP[l]?` / ${LV_XP[l]}`:" · 최고"}</small></div>
         <div class="prow"><span>탐지 능력</span><b>Lv.${dl}</b>${bar(dx,DET_XP[dl-1],DET_XP[dl])}<small>경험 ${dx}${DET_XP[dl]?` / ${DET_XP[dl]}`:" · 최고"}</small></div>
+        <div class="prow"><span>체력</span><b>${Math.floor(staNow())}</b>${bar(staNow(),0,100)}<small>${staTxt()} · ${Math.round(staIv()/1000)}초에 1씩 회복</small></div>
         <div class="prow"><span>보유 자금</span><b>${won(P.money)}</b></div>
         <div class="prow"><span>무사 탈굴</span><b>${P.trips||0}회</b><small>완주한 동굴 ${done}곳</small></div>
         <div class="prow"><span>배낭</span><b>${cap()}칸</b><small>도감 ${dexN()}종 · 유물 ${Object.keys(P.relics).length}개</small></div>
@@ -2261,15 +2395,19 @@ function renderPrep(){
     renderPrep();});
   $("story").querySelectorAll(".packgrid .slot[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;prepSel=k;kit[k]=Math.max(0,(kit[k]||0)-1);if(!kit[k])delete kit[k];prepMsg="";renderPrep();});
   const box=$("choices"); box.innerHTML="";
-  const b=document.createElement("button"); b.textContent=`이 장비로 입굴한다 (${used}칸)`;
-  b.disabled=used>CAP; b.onclick=startCave; box.appendChild(b);
+  const b=document.createElement("button"); const sv0=Math.floor(staNow());
+  b.innerHTML=`이 장비로 입굴한다 (${used}칸 · 체력 ${sv0})${sv0<STA_MIN?`<small>몸이 무겁다. 체력 ${STA_MIN}부터 입굴할 수 있다 · ${staMin(STA_MIN)}분 뒤 · 종모산악 국밥으로 회복할 수도 있다</small>`:`<small>날씨: ${WX[wxOf(S.cave)].n}${WX_FX[S.cave]&&["rain","storm"].includes(wxOf(S.cave))?" · 이 동굴은 비의 영향을 받는다":""}</small>`}`;
+  b.disabled=used>CAP||sv0<STA_MIN; b.onclick=startCave; box.appendChild(b);
   animate();
 }
 function startCave(){
+  if(Math.floor(staNow())<STA_MIN){toast("몸이 무겁다. 좀 더 쉬자.");return;}
+  S.sta=Math.floor(staNow()); S.wx=wxOf(S.cave);
   Object.entries(kit).forEach(([k,n])=>{P.stock[k]=Math.max(0,own(k)-n);});saveP();
   S.inv={...kit,helmet:1}; S.phase="cave"; msg=[];
   if(!has("backup")) S.bk=0;
   const st=cave().start; S.cur=st; S.seen[st]=1;
+  if(S.wx!=="sun"){const fx=wxFx();pushMsg({t:`바깥 날씨: ${WX[S.wx].n}.${fx?" "+fx.note:""}`,bad:raining()?1:0});}
   render();
 }
 
@@ -2306,6 +2444,8 @@ function drawOwner(){
 /* ================= 장비점 ================= */
 let shopFrom="map", shopSel="food", shopMsg="", shopTab="trade";
 function openShop(from){shopFrom=from;S.phase="shop";shopMsg="";ownerSay=OWNER_HI[Math.floor(Math.random()*OWNER_HI.length)];renderShop();window.scrollTo(0,0);}
+function gukRow(){const cd=(P.gukT||0)+3600000-Date.now(),v=Math.floor(staNow());
+  return `<div class="guk"><span><b>사장님 국밥</b> 체력 +30 · 한 시간에 한 그릇 · 지금 체력 ${v}</span><button id="gukb" ${cd>0||P.money<8000||v>=100?'disabled':''}>${cd>0?Math.ceil(cd/60000)+"분 뒤":v>=100?"배부름":"₩8,000"}</button></div>`;}
 function renderShop(){
   if(shopTab==="up") return renderUpgrade();
   hud(); drawBag(); drawBook(); artShow(0); $("logSec").hidden=true;
@@ -2315,6 +2455,7 @@ function renderShop(){
   $("story").innerHTML=`<div class="frame shop">
     <div class="ttl">${ptxt("종모산악",{size:12,shadow:"#fff4c4"})}<span>보유 자금 <b class="cash">${won(P.money)}</b></span></div>
     ${ownerBox()}
+    ${gukRow()}
     ${shopTabs()}
     <div class="shopgrid">${items.map(k=>`<button class="sitem ${shopSel===k?'sel':''} ${P.money<PRICE[k]?'poor':''}" data-k="${k}" aria-label="${GEAR[k].n} ${won(PRICE[k])}" title="${GEAR[k].n}">
       <span class="slot">${ico(k)}${lenTag(k)}${own(k)?`<b class="cnt">${own(k)}</b>`:""}</span><span class="pr">${shortWon(PRICE[k])}</span></button>`).join("")}</div>
@@ -2326,6 +2467,7 @@ function renderShop(){
     <div class="invgrid"><span class="slot worn" title="헬멧·헤드램프 (착용 중)">${ico("helmet")}</span>${items.filter(k=>own(k)>0).map(k=>`<button class="slot ${shopSel===k?'sel':''}" data-k="${k}" aria-label="${GEAR[k].n} ${own(k)}개">${ico(k)}<b class="cnt">${own(k)}</b></button>`).join("")||`<span class="invempty">아직 산 장비가 없다.</span>`}</div>
   </div>`;
   wireTabs(); drawOwner();
+  const gb=$("gukb"); if(gb) gb.onclick=()=>{staNow();P.money-=8000;P.sta=Math.min(100,P.sta+30);P.gukT=Date.now();saveP();ownerSay="뜨끈하지? 국물까지 싹 비워. 동굴은 체력이야.";shopMsg="국밥 한 그릇 뚝딱. 체력 +30.";renderShop();};
   $("story").querySelectorAll(".sitem,.invgrid .slot[data-k]").forEach(b=>b.onclick=()=>{shopSel=b.dataset.k;shopMsg="";renderShop();});
   $("sell").onclick=()=>{if(!own(shopSel))return;const sp=sellPrice(shopSel);P.stock[shopSel]=own(shopSel)-1;if(!P.stock[shopSel])delete P.stock[shopSel];P.money+=sp;saveP();shopMsg=`${g.n}${josa(g.n)} ${won(sp)}에 팔았다. 남은 수 ${own(shopSel)}개.`;ownerSay="이건 내가 잘 맡아 두지. 필요하면 또 와.";renderShop();};
   $("buy").onclick=()=>{if(P.money<pr){ownerSay="외상은 안 돼~ 탐사 다녀와서 사.";renderShop();return;}ownerSay=ROPE_LEN[shopSel]?"로프는 길이가 생명이야. 피치 깊이보다 넉넉하게!":"좋은 선택이야. 잘 쓰고 무사히 와.";P.money-=pr;P.stock[shopSel]=own(shopSel)+1;saveP();shopMsg=`${g.n}${josa(g.n)} 샀다. 보유 ${own(shopSel)}개.`;renderShop();};
@@ -2409,7 +2551,7 @@ function render(){
   hud(); drawBag(true); drawBook();
   artShow(1); drawScene($("art"),(ART[S.cave]||{})[S.cur]||"hall",S.cave+":"+S.cur);
   const svc=svCount(S.cave,svMerged());
-  $("place").innerHTML=`${sc.p}<span>${cave().name}${has("survey")||svc.any?` · 측량 ${svc.ok}/${svc.n}`:""}</span>`;
+  $("place").innerHTML=`${sc.p}<span>${cave().name} · ${WX[S.wx||"sun"].n}${has("survey")||svc.any?` · 측량 ${svc.ok}/${svc.n}`:""}</span>`;
   let html=sc.t().map(speech).join("");
   const lm=Math.min(2,lampMode()+detSight());
   const hidden=sc.disc.filter(id=>!S.rec.includes(id)&&REC[id].light>lm&&!(REC[id].bat&&S.f.disturbed));
@@ -2418,12 +2560,12 @@ function render(){
   msg.forEach(m=>{html+=m.t.startsWith("@")?speech(m.t):`<p class="${m.rec?'rec':'note'} ${m.bad?'bad':''}">${m.t}</p>`;});
   $("story").innerHTML=html;
   const box=$("choices"); box.innerHTML="";
-  sc.disc.forEach(id=>{
+  (S.f.snake?[]:sc.disc).forEach(id=>{
     const r=REC[id];
     if(S.rec.includes(id)||r.light>lm||(r.bat&&S.f.disturbed)) return;
     const b=document.createElement("button"); b.className="record";
     const reason=r.cam&&!has("camera")?"너무 작아 맨눈으로는 종을 알 수 없다. 접사 카메라가 필요하다":null;
-    b.innerHTML=`${r.n}${josa(r.n)} 관찰해 기록장에 적는다${reason?`<small>${reason}</small>`:""}`;
+    b.innerHTML=`${r.n}${josa(r.n)} 관찰해 기록장에 적는다${reason?`<small>${reason}</small>`:OBS_FAIL[id]?`<small>생물 · 놀라게 하면 탈이 날 수 있다 (${Math.round(obsP(id)*100)}%)</small>`:""}`;
     if(reason) b.disabled=true; else b.onclick=()=>record(id);
     box.appendChild(b);
   });
@@ -2432,7 +2574,7 @@ function render(){
     b.innerHTML=`${svQ(S.cur)?"이 구간을 다시 측량해 오차를 지운다":"스테이션을 박고 이 구간을 측량한다"}<small>20분 · 배터리 조금 · ${sc.len}m${lampMode()===0?" · 어두우면 오차가 잘 난다":""}</small>`;
     b.onclick=survey; box.appendChild(b);
   }
-  const rest=sc.norest?[]:[{t:"조명을 끄고 잠시 쉰다",cls:"back",sub:`체력 +15 · 체온 −${has("inner")?3:8}`,do:()=>{S.sta+=15;S.tmp-=has("inner")?3:8;S.min+=30;return "헤드램프를 끄고 바위에 등을 기댔다. 완전한 어둠 속에 물방울 소리만 들린다. 몸이 식는다.";}}];
+  const rest=sc.norest||S.f.snake?[]:[{t:"조명을 끄고 잠시 쉰다",cls:"back",sub:`체력 +15 · 체온 −${has("inner")?3:8}`,do:()=>{S.sta+=15;S.tmp-=has("inner")?3:8;S.min+=30;return "헤드램프를 끄고 바위에 등을 기댔다. 완전한 어둠 속에 물방울 소리만 들린다. 몸이 식는다.";}}];
   [...sc.c.filter(c=>!c.if||c.if()),...rest].forEach(c=>{
     const b=document.createElement("button");
     b.className=[c.gear?"gear":"",c.cls||""].join(" ");
@@ -2461,6 +2603,7 @@ function end(k){
   const before=xp(),DEX0=dexN();
   const E=ENDINGS[k], safe=E.kind==="탈굴";
   const p=cp(S.cave); p.runs++;
+  P.sta=safe?Math.max(0,Math.round(S.sta)):20; P.staT=Date.now();
   let newRecs=0, goalNew=0;
   if(safe){
     P.trips=(P.trips||0)+1;
@@ -2489,8 +2632,8 @@ function end(k){
   $("place").textContent="";
   const pre=msg.map(m=>m.t.startsWith("@")?speech(m.t):`<p class="note ${m.bad?'bad':''}">${m.t}</p>`).join("");
   const extra=safe?[dyLine(),S.f.broke?"생성물을 깨뜨린 일은 보고서 한쪽에 따로 적었다.":null,S.f.disturbed?"박쥐 동면을 방해한 일도 함께 보고했다.":null].filter(Boolean):[];
-  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}${svBonus?`<br><span class="lvup">측량도 완성! 종모산악에 납품 +${won(svBonus)} · 다음 입굴부터 갈림길 정보와 빠른 귀환</span>`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>탐사 경력 <b>+${gained}</b> → ${xp()} (무사 탈굴 +5 포함)${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
-    :`이번 기록 ${S.rec.length}개는 동굴에 남았다. 탈굴하지 못한 탐사는 경력과 지원금에 들어가지 않고, 챙겨 간 장비와 찾은 허가증도 잃었다.`;
+  const score=safe?`탈굴 시각 <b>${clock(S.min)}</b> · ${TOD(S.min)}<br>이번 기록 ${S.rec.length}개 (새 기록 ${newRecs})${goalNew?" · 막장을 처음 찍음":""}${S.meters?` · 측량 ${S.meters}m`:""}${svBonus?`<br><span class="lvup">측량도 완성! 종모산악에 납품 +${won(svBonus)} · 다음 입굴부터 갈림길 정보와 빠른 귀환</span>`:""}<br>탐사 지원금 <b>+${won(earn)}</b> · 남은 장비는 창고로<br>남은 체력 <b>${Math.round(P.sta)}</b> · 쉬는 동안 천천히 회복된다<br>탐사 경력 <b>+${gained}</b> → ${xp()} (무사 탈굴 +5 포함)${la>lb?`<br><span class="lvup">레벨 업! Lv.${lb} → Lv.${la}</span>${capOf(la)>capOf(lb)?` · 배낭 ${capOf(la)}칸으로 늘어남`:""}`:""}${gotPermits.length?`<br>입굴 허가증 획득: <b>${gotPermits.map(id=>CAVES[id].name).join(", ")}</b>`:""}${gotRelics.length?`<br>유물 기록: <b>${gotRelics.map(id=>RELICS.find(x=>x.id===id).n).join(", ")}</b> (유물마다 ₩5,000 · 탐지 경험 +5)`:""}${dmg?`<br><span class="pen">훼손 기록: 생성물 파손이나 박쥐 동면 방해로 지원금이 30% 깎였다</span>`:""}${newM.length?`<br><span class="lvup">도감 보상</span> ${newM.map(m=>m.t).join(" · ")}`:""}`
+    :`이번 기록 ${S.rec.length}개는 동굴에 남았다. 탈굴하지 못한 탐사는 경력과 지원금에 들어가지 않고, 챙겨 간 장비와 찾은 허가증도 잃었다. 몸도 크게 상해 체력이 20으로 떨어졌다.`;
   $("story").innerHTML=`<div class="ending"><div class="tag">${E.kind} · ${cave().name} · 결말 ${keys.indexOf(k)+1} / ${keys.length}</div><div style="margin:4px 0 12px">${ptxt(E.t,{size:16,scale:2,shadow:"#f2b705"})}</div>${pre}${E.d().map(speech).join("")}${extra.map(speech).join("")}<p class="score">${score}</p></div>`;
   const box=$("choices"); box.innerHTML="";
   const b1=document.createElement("button"); b1.textContent="지도로"; b1.onclick=()=>{selCave=null;newRun();renderMap();window.scrollTo(0,0);}; box.appendChild(b1);
